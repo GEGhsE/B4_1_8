@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  © 2026 GEG 화성(깊이 e끌림). All rights reserved.
+
+  본 코드는 「저작권법」상 보호받는 저작물입니다.
+  - 복제권(제16조)·공중송신권(제18조)·배포권(제20조)은
+    저작권자에게 있습니다.
+  - 정식 경로로 받은 이용자라도 코드의 무단 복제·재배포·
+    재판매·리브랜딩은 허용되지 않습니다.
+  - 무단 이용 시 「저작권법」 제136조(5년 이하 징역 또는
+    5천만 원 이하 벌금) 및 제125조(손해배상) 적용 대상이
+    될 수 있습니다.
+  - 이용 문의: bacusiki777@gmail.com, for2102@jimj.kr
+  - BUILD: GEGHS-DEEPE-2026
+  ============================================================
+-->
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💌 마음 전달 우체국 — 편지 보기</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; word-break:keep-all; overflow-wrap:break-word; }
+
+    body {
+      font-family: 'Malgun Gothic', sans-serif;
+      background: linear-gradient(135deg, #e3f2fd 0%, #fce4ec 100%);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 18px 14px;
+    }
+
+    /* 로딩 / 에러 */
+    .state-wrap {
+      text-align: center;
+      padding: 60px 20px;
+      color: #64748b;
+    }
+    .state-wrap .icon { font-size: 3em; display: block; margin-bottom: 16px; animation: spin 1s linear infinite; }
+    .state-wrap .err-icon { font-size: 3em; display: block; margin-bottom: 16px; animation: none; }
+    @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+    /* 편지 카드 */
+    .letter-card {
+      width: 100%;
+      max-width: 980px;
+      display: none;
+      transform-origin: top center;
+    }
+
+    /* Heart Post 로고 */
+    .hp-logo {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 0.9em;
+      color: #d32f2f;
+      font-weight: bold;
+    }
+    .hp-logo span {
+      background: white;
+      padding: 6px 18px;
+      border-radius: 20px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+    }
+
+    /* 봉투 */
+    .envelope {
+      background: #fffef9;
+      border: 2px solid #f5c0c8;
+      border-radius: 6px 6px 18px 18px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+
+    /* 봉투 덮개 */
+    .env-flap {
+      height: 100px;
+      background: linear-gradient(160deg, #f093fb 0%, #f5576c 100%);
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      position: relative;
+    }
+    .env-flap-icon {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -30%);
+      font-size: 2em;
+    }
+
+    /* 편지 유형 뱃지 */
+    .type-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: white;
+      padding: 7px 20px;
+      border-radius: 24px;
+      font-size: 1.05em;
+      font-weight: bold;
+      margin: 20px 0 0 28px;
+    }
+
+    /* 편지 내용 영역 */
+    .letter-body {
+      padding: 18px 44px 36px;
+    }
+
+    .letter-to {
+      font-size: 1.15em;
+      color: #94a3b8;
+      margin-bottom: 4px;
+    }
+    .letter-to strong {
+      font-size: 1.6em;
+      color: #1e293b;
+    }
+    .letter-divider {
+      height: 1px;
+      background: linear-gradient(90deg, #f5c0c8, transparent);
+      margin: 12px 0 20px;
+    }
+
+    .letter-content {
+      font-size: 2em;
+      line-height: 1.9;
+      color: #1e293b;
+      white-space: pre-wrap;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+      min-height: 120px;
+      padding-bottom: 4px;
+    }
+
+    .letter-from {
+      text-align: right;
+      margin-top: 24px;
+      padding-top: 14px;
+      border-top: 1px dashed #e2e8f0;
+    }
+    .letter-from .date {
+      font-size: 1.05em;
+      color: #94a3b8;
+      margin-bottom: 4px;
+    }
+    .letter-from .name {
+      font-size: 1.3em;
+      color: #475569;
+    }
+    .letter-from .name strong {
+      color: #1e293b;
+    }
+
+    /* ── 편지지 배경 (학생 앱에서 고른 편지지 적용) ── */
+    .paper-basic   { background-color: #fffdf5; }
+    .paper-sky {
+      background-color: #eff8ff;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg fill='%23bae6fd' fill-opacity='0.5'%3E%3Cellipse cx='30' cy='30' rx='18' ry='9'/%3E%3Cellipse cx='42' cy='26' rx='12' ry='7'/%3E%3Cellipse cx='90' cy='80' rx='16' ry='8'/%3E%3Cellipse cx='100' cy='76' rx='10' ry='6'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    .paper-blossom {
+      background-color: #fdf2f8;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cg fill='%23f9a8d4' fill-opacity='0.45'%3E%3Cpath d='M20 15 Q24 8 28 15 Q24 20 20 15Z'/%3E%3Cpath d='M70 40 Q74 33 78 40 Q74 45 70 40Z'/%3E%3Cpath d='M45 75 Q49 68 53 75 Q49 80 45 75Z'/%3E%3Ccircle cx='85' cy='20' r='2.5'/%3E%3Ccircle cx='15' cy='60' r='2'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    .paper-forest {
+      background-color: #f0fdf4;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='110'%3E%3Cg fill='%2386efac' fill-opacity='0.5'%3E%3Cpath d='M20 20 Q30 10 35 25 Q25 30 20 20Z'/%3E%3Cpath d='M80 55 Q90 45 95 60 Q85 65 80 55Z'/%3E%3Cpath d='M50 85 Q60 75 65 90 Q55 95 50 85Z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    .paper-night {
+      background-color: #f5f3ff;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cg fill='%23c4b5fd' fill-opacity='0.6'%3E%3Cpath d='M20 15 l2 5 5 0 -4 4 2 5 -5 -3 -5 3 2 -5 -4 -4 5 0z'/%3E%3Ccircle cx='70' cy='30' r='1.5'/%3E%3Ccircle cx='45' cy='60' r='1.5'/%3E%3Cpath d='M75 70 l1.5 4 4 0 -3 3 1.5 4 -4 -2.5 -4 2.5 1.5 -4 -3 -3 4 0z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    /* 봉투 하단 스트라이프 */
+    .env-stripe {
+      height: 8px;
+      background: repeating-linear-gradient(
+        -45deg,
+        #f5576c, #f5576c 4px,
+        #f093fb 4px, #f093fb 10px
+      );
+    }
+
+    /* 인쇄 / 공유 버튼 */
+    .action-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+    .action-btn {
+      padding: 11px 22px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1.1em;
+      transition: opacity 0.2s;
+    }
+    .action-btn:hover { opacity: 0.85; }
+    .btn-print {
+      background: white;
+      color: #475569;
+      border: 1.5px solid #e2e8f0;
+    }
+    .btn-copy {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+    }
+
+    /* ── 좁은 화면(휴대전화): 카드 폭에 맞춰 글자 조정 ── */
+    @media (max-width: 700px) {
+      .letter-content { font-size: 1.45em; }
+      .letter-to strong { font-size: 1.35em; }
+      .letter-body { padding: 12px 22px 26px; }
+      .type-badge { margin-left: 20px; }
+    }
+
+    /* ── 인쇄 스타일 ── */
+    @media print {
+      body { background: white; padding: 10px; height: auto; overflow: visible; }
+      .action-row { display: none; }
+      .hp-logo { display: none; }
+      .letter-card { display: block !important; transform: none !important; }
+      .envelope { box-shadow: none; border: 2px solid #f5c0c8; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 로딩 상태 -->
+<div class="state-wrap" id="stateLoading">
+  <span class="icon">📮</span>
+  <div>편지를 불러오는 중이에요...</div>
+</div>
+
+<!-- 에러 상태 -->
+<div class="state-wrap" id="stateError" style="display:none;">
+  <span class="err-icon">😢</span>
+  <div id="errMsg" style="color:#ef4444;font-weight:bold;margin-bottom:8px;"></div>
+  <div style="font-size:0.88em;">링크를 다시 확인해 주세요.</div>
+</div>
+
+<!-- 편지 카드 -->
+<div class="letter-card" id="letterCard">
+  <div class="hp-logo"><span>💌 Heart Post — 마음 전달 우체국</span></div>
+
+  <div class="envelope">
+    <div class="env-flap">
+      <span class="env-flap-icon">💌</span>
+    </div>
+
+    <div class="type-badge" id="typeBadge"></div>
+
+    <div class="letter-body">
+      <div class="letter-to">To.</div>
+      <div class="letter-to"><strong id="letterTo"></strong></div>
+      <div class="letter-divider"></div>
+      <div class="letter-content" id="letterContent"></div>
+      <div class="letter-from">
+        <div class="date" id="letterDate"></div>
+        <div class="name">From. <strong id="letterFrom"></strong></div>
+      </div>
+    </div>
+
+    <div class="env-stripe"></div>
+  </div>
+
+  <div class="action-row">
+    <button class="action-btn btn-print" onclick="window.print()">🖨️ 인쇄하기</button>
+    <button class="action-btn btn-copy" id="copyBtn" onclick="copyLink()">🔗 링크 복사</button>
+  </div>
+</div>
+
+<script>
+  // ── 접속 방식 판별 ─────────────────────────────────────
+  // [A] Apps Script가 직접 서빙: 아래 값이 실제 편지 번호로 채워진다.
+  // [B] GitHub Pages 등 정적 서빙: 특수 문법이 글자 그대로 남으므로
+  //     주소창의 #c=창고주소&id=편지번호 에서 정보를 읽는다.
+  const RAW_ID     = '<?= letterId ?>';
+  const GAS_SERVED = RAW_ID.indexOf('<?') !== 0;
+
+  let LETTER_ID = '';
+  let EXEC_URL  = '';
+  if (GAS_SERVED) {
+    LETTER_ID = RAW_ID;
+  } else {
+    const h = location.hash || '';
+    const c = h.match(/[#&]c=([^&]+)/);
+    const i = h.match(/[#&]id=([^&]+)/);
+    EXEC_URL  = c ? decodeURIComponent(c[1]) : '';
+    LETTER_ID = i ? decodeURIComponent(i[1]) : '';
+  }
+
+  const TYPE_NAMES = {
+    '감사 편지':'🙏 감사 편지', '축하 편지':'🎉 축하 편지',
+    '위로 편지':'💝 위로 편지', '초대 편지':'🎈 초대 편지', '사과 편지':'🙇 사과 편지'
+  };
+
+  function showError(msg) {
+    document.getElementById('stateLoading').style.display = 'none';
+    document.getElementById('stateError').style.display   = 'block';
+    document.getElementById('errMsg').textContent = msg;
+  }
+
+  function showLetter(data) {
+    document.getElementById('stateLoading').style.display = 'none';
+    document.getElementById('letterCard').style.display   = 'block';
+    document.getElementById('typeBadge').textContent      = TYPE_NAMES[data.letterType] || data.letterType;
+    document.getElementById('letterTo').textContent       = data.recipient  || '';
+    document.getElementById('letterContent').textContent  = data.content    || '';
+    document.getElementById('letterFrom').textContent     = data.sender     || '';
+    document.getElementById('letterDate').textContent     = data.date       || '';
+    // 학생이 고른 편지지 적용
+    const env = document.querySelector('.envelope');
+    if (env) env.classList.add('paper-' + (data.paper || 'basic'));
+    // 화면에 맞추기 (스크롤 없음)
+    requestAnimationFrame(fitLetter);
+  }
+
+  // 편지가 화면보다 길면 카드 전체를 비율 축소해 스크롤 없이 보여줌
+  function fitLetter() {
+    const card = document.getElementById('letterCard');
+    if (!card || card.style.display === 'none') return;
+    card.style.transform = 'scale(1)';
+    const availH = window.innerHeight - 36;
+    const availW = window.innerWidth  - 28;
+    const needH  = card.offsetHeight;
+    const needW  = card.offsetWidth;
+    const scale  = Math.min(availH / needH, availW / needW, 1);
+    card.style.transform = `scale(${scale})`;
+  }
+  window.addEventListener('resize', fitLetter);
+
+  function copyLink() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = '✅ 복사됐어요!';
+      setTimeout(() => { btn.textContent = '🔗 링크 복사'; }, 2000);
+    }).catch(() => {
+      const el = document.createElement('textarea');
+      el.value = url;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      document.getElementById('copyBtn').textContent = '✅ 복사됐어요!';
+      setTimeout(() => { document.getElementById('copyBtn').textContent = '🔗 링크 복사'; }, 2000);
+    });
+  }
+
+  // 편지 요청 — 서빙 방식에 맞는 길로 창고에 묻는다
+  function _handleLetter(res) {
+    if (res && res.success) showLetter(res);
+    else showError((res && res.message) || '편지를 찾을 수 없어요.');
+  }
+
+  function requestLetter(id) {
+    if (GAS_SERVED) {
+      google.script.run
+        .withSuccessHandler(_handleLetter)
+        .withFailureHandler(() => showError('연결 오류가 발생했어요.'))
+        .getLetterById(id);
+    } else {
+      // 화면과 시트가 서로 다른 주소이므로, 막히지 않는 방식으로 부른다.
+      const cb = '_hpv_' + Date.now();
+      let done = false;
+      const timer = setTimeout(function () { finish(null, true); }, 20000);
+
+      function finish(res, failed) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        try { delete window[cb]; } catch (e) { window[cb] = undefined; }
+        const el = document.getElementById(cb);
+        if (el && el.parentNode) el.parentNode.removeChild(el);
+        if (failed) showError('연결 오류가 발생했어요.');
+        else _handleLetter(res);
+      }
+
+      window[cb] = function (res) { finish(res, false); };
+
+      const sc = document.createElement('script');
+      sc.id  = cb;
+      sc.src = EXEC_URL + (EXEC_URL.indexOf('?') >= 0 ? '&' : '?') +
+               'fn=getLetterById&args=' + encodeURIComponent(JSON.stringify([id])) +
+               '&callback=' + cb + '&_=' + Date.now();
+      sc.async = true;
+      sc.onerror = function () { finish(null, true); };
+      document.body.appendChild(sc);
+    }
+  }
+
+  // 편지 번호가 없거나 주소가 불완전할 때
+  if (!LETTER_ID || (!GAS_SERVED && !EXEC_URL)) {
+    showError('편지 주소가 올바르지 않아요.');
+  } else {
+    requestLetter(LETTER_ID);
+  }
+</script>
+</body>
+</html>
