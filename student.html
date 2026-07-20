@@ -1,0 +1,4106 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  © 2026 GEG 화성(깊이 e끌림). All rights reserved.
+
+  본 코드는 「저작권법」상 보호받는 저작물입니다.
+  - 복제권(제16조)·공중송신권(제18조)·배포권(제20조)은
+    저작권자에게 있습니다.
+  - 정식 경로로 받은 이용자라도 코드의 무단 복제·재배포·
+    재판매·리브랜딩은 허용되지 않습니다.
+  - 무단 이용 시 「저작권법」 제136조(5년 이하 징역 또는
+    5천만 원 이하 벌금) 및 제125조(손해배상) 적용 대상이
+    될 수 있습니다.
+  - 이용 문의: bacusiki777@gmail.com, for2102@jimj.kr
+  - BUILD: GEGHS-DEEPE-2026
+  ============================================================
+-->
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💌 마음 전달 우체국</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      word-break: keep-all;     /* 한국어 어절(낱말+조사)을 통째로 유지 */
+      overflow-wrap: break-word;
+    }
+    /* 한국어 텍스트 줄바꿈: 어절 단위 유지 (조사 분리 방지) */
+    body, p, span, div, h1, h2, h3, strong, button, label, td, li, textarea, input {
+      word-break: keep-all;
+    }
+
+    html, body {
+      font-family: 'Malgun Gothic', sans-serif;
+      font-size: 23px;
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: fixed;
+      top: 0; left: 0;
+    }
+
+    /* ── 헤더/제목 전용 주아체 ── */
+    h1, h2, h3,
+    header h1,
+    .sl-band .sl-title,
+    .intro-hero h2,
+    .env-title,
+    .tpl-badge,
+    .sincerity-card h2,
+    .result-card h2,
+    .tab.active,
+    .step-body strong,
+    .ss-name,
+    .tm-name,
+    .cb-title,
+    .cl-title,
+    .login-header h1,
+    .share-box .share-title,
+    #workspaceTitle {
+      font-family: 'Jua', 'Malgun Gothic', sans-serif;
+    }
+
+    /* ── Scale 래퍼: 반응형의 핵심 ── */
+    /* JS가 화면 너비에 따라 scale()을 적용함 */
+    /* transform은 document flow에 영향 없으므로 */
+    /* .scale-host로 높이를 보정함              */
+    .scale-host {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 6px 2px 30px;
+      overflow: hidden;
+    }
+
+    /* ── 우체통 전체 래퍼 ── */
+    .container {
+      position: relative;
+      width: 100%;
+      max-width: 1600px;
+      height: calc(100vh - 50px);
+      display: flex;
+      flex-direction: column;
+      filter: drop-shadow(0 16px 30px rgba(0,0,0,0.3));
+    }
+
+    /* 둥근 아치 뚜껑 */
+    .mailbox-top {
+      height: 46px;
+      background: linear-gradient(180deg, #ef5350, #e53935);
+      border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+      position: relative;
+      flex-shrink: 0;
+      box-shadow: inset 0 3px 0 rgba(255,255,255,0.3);
+    }
+    /* 투입구 슬롯 */
+    .mailbox-slot {
+      position: absolute;
+      top: 20px; left: 50%;
+      transform: translateX(-50%);
+      width: 240px; height: 14px;
+      background: #1a1a1a;
+      border-radius: 7px;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.7),
+                  0 1px 2px rgba(255,255,255,0.2);
+    }
+    /* 우체통 몸체 (빨간 바깥) */
+    .mailbox-outer {
+      flex: 1;
+      background: linear-gradient(180deg, #e53935, #c62828 60%, #b71c1c);
+      border-radius: 0 0 18px 18px;
+      padding: 8px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      box-shadow: inset 0 -8px 14px rgba(0,0,0,0.25),
+                  inset 4px 0 8px rgba(0,0,0,0.1),
+                  inset -4px 0 8px rgba(0,0,0,0.1);
+    }
+    /* 받침 다리 */
+    .mailbox-legs {
+      position: absolute;
+      bottom: -26px; left: 50%;
+      transform: translateX(-50%);
+      width: 50%;
+      max-width: 600px;
+      height: 28px;
+      display: flex;
+      justify-content: space-between;
+      z-index: -1;
+    }
+    .mailbox-legs::before,
+    .mailbox-legs::after {
+      content: '';
+      width: 30px;
+      height: 32px;
+      background: linear-gradient(to bottom, #8b0000, #5c0000);
+      border-radius: 0 0 6px 6px;
+    }
+
+    .mailbox-logo { display: none; }
+
+    /* 흰색 학습창 */
+    .mailbox-body {
+      background: white;
+      border-radius: 14px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    }
+    /* 받침대 (구버전 — 미사용) */
+    .container-base { display: none; }
+
+    /* ── 헤더 ── */
+    header {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      padding: 10px 16px 8px;
+      color: white;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 1.5em; margin-bottom: 3px; }
+    header p  { font-size: 0.9em; opacity: 0.9; }
+    .user-info {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 6px;
+      flex-wrap: nowrap;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.95);
+      padding: 8px 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      min-width: 0;
+      flex: 1;
+      max-width: 260px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .stat-card h3   { font-size: 0.8em; color: #888; margin: 0; white-space: nowrap; font-weight: bold; }
+    .stat-card .val { font-size: 0.8em; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* 값마다 색상 다르게 */
+    #deliveredCount { color: #db2777; }
+    #avgScore       { color: #7c3aed; }
+    #stampCount     { color: #ea580c; }
+    #userRank       { color: #0891b2; font-size: 0.72em; }
+
+    /* ── 탭 ── */
+    .main-content {
+      padding: 8px 10px 6px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+    }
+    .tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: nowrap; flex-shrink: 0; }
+    .tab {
+      flex: 1;
+      min-width: 0;
+      padding: 13px 4px;
+      background: #f0f0f0;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.92em;
+      font-family: inherit;
+      transition: all 0.2s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tab:hover  { background: #e0e0e0; }
+    .tab.active { background: #7c3aed; color: white; }
+
+    /* ── 로그인 화면 (봉투 디자인) ── */
+    #loginScreen {
+      position: fixed; inset: 0;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      z-index: 500;
+    }
+
+    /* 봉투 카드 전체 — 화면 꽉 채우기 */
+    .envelope-card {
+      width: 100%;
+      max-width: 540px;
+      background: #fffef9;
+      border: 2px solid #f5c0c8;
+      border-radius: 6px 6px 20px 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 봉투 상단 덮개 삼각형 */
+    .env-flap {
+      height: 80px;
+      background: linear-gradient(160deg, #f093fb 0%, #f5576c 100%);
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      position: relative;
+    }
+
+    /* 봉투 하단 장식선 */
+    .env-bottom-stripe {
+      height: 10px;
+      background: repeating-linear-gradient(
+        -45deg,
+        #f5576c, #f5576c 4px,
+        #f093fb 4px, #f093fb 10px
+      );
+      border-radius: 0 0 18px 18px;
+    }
+
+    /* 💌 아이콘 */
+    .env-icon {
+      position: absolute;
+      top: 48px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 2.6em;
+      z-index: 5;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+    }
+
+    /* Heart Post 로고 뱃지 */
+    .env-logo-pill {
+      position: absolute;
+      top: 8px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.92);
+      padding: 5px 18px;
+      border-radius: 20px;
+      font-weight: bold;
+      color: #d32f2f;
+      font-size: 0.88em;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+      z-index: 6;
+      white-space: nowrap;
+    }
+
+    /* 봉투 내용 영역 */
+    .env-body {
+      padding: 36px 32px 24px;
+    }
+    .env-title {
+      font-family: 'Jua', sans-serif;
+      font-size: 1.7em;
+      font-weight: bold;
+      color: #1e293b;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .env-subtitle {
+      font-size: 0.95em;
+      color: #64748b;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    /* 폼 공통 */
+    .login-label {
+      font-size: 1em;
+      font-weight: bold;
+      color: #444;
+      margin-bottom: 8px;
+    }
+    .login-input {
+      width: 100%;
+      padding: 16px 20px;
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      font-family: inherit;
+      font-size: 1.3em;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+      letter-spacing: 4px;
+      text-align: center;
+    }
+    .login-input:focus { outline: none; border-color: #7c3aed; }
+
+    /* ── 기존 nameScreen 제거 ── */
+    #nameScreen { display: none !important; }
+
+    /* ── 편지 유형 선택 ── */
+    .letter-types {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+      flex-wrap: nowrap;
+    }
+    .letter-type-card {
+      background: #fef9ec;
+      padding: 18px 8px 14px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      border: 2.5px solid transparent;
+      flex: 1;
+    }
+    .letter-type-card:hover   { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.12); }
+    .letter-type-card.selected { border-color: #7c3aed; box-shadow: 0 0 16px rgba(124,58,237,0.3); }
+    .letter-type-card .icon   { font-size: 2.6em; margin-bottom: 6px; }
+    .letter-type-card h3      { font-size: 1em; color: #333; font-weight: bold; }
+
+    /* ── 편지 작성 ── */
+    .letter-workspace { display: none; }
+    .letter-workspace.active { display: block; }
+
+    .mode-selector { display: flex; gap: 12px; margin-bottom: 20px; }
+    .mode-btn {
+      flex: 1;
+      padding: 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .mode-btn h3 { font-size: 0.95em; margin-bottom: 4px; }
+    .mode-btn p  { font-size: 0.78em; color: #888; }
+    .mode-btn.active { border-color: #7c3aed; background: #f5f0ff; }
+
+    /* ── 템플릿 모드 섹션 ── */
+    .flower-deco {
+      text-align: center;
+      font-size: 1.3em;
+      letter-spacing: 5px;
+      margin-bottom: 20px;
+      opacity: 0.7;
+    }
+    .tpl-section { margin-bottom: 26px; }
+
+    .tpl-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      color: white;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .tpl-hint {
+      background: linear-gradient(135deg, #fffbf0, #fff5e4);
+      border-radius: 0 10px 10px 0;
+      padding: 12px 16px;
+      font-size: 0.88em;
+      color: #555;
+      margin-bottom: 10px;
+      line-height: 1.9;
+      position: relative;
+    }
+    .tpl-hint::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: linear-gradient(to bottom, #7c3aed, #ec4899);
+      border-radius: 2px 0 0 2px;
+    }
+    .tpl-input, .tpl-textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 1.1em;
+      transition: border-color 0.2s;
+    }
+    .tpl-input:focus, .tpl-textarea:focus {
+      outline: none;
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.08);
+    }
+    .tpl-textarea {
+      resize: vertical;
+      line-height: 1.85;
+    }
+
+    /* ── 자유 작성 모드 (기존 유지) ── */
+    .field-row { margin-bottom: 10px; }
+    .field-label { font-weight: bold; font-size: 0.85em; color: #555; margin-bottom: 2px; }
+    .free-paper {
+      background: #fffdf7;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+    .free-paper input, .free-paper textarea {
+      width: 100%;
+      border: none;
+      border-bottom: 2px dashed #ccc;
+      background: transparent;
+      font-family: inherit;
+      font-size: 1em;
+      outline: none;
+      padding: 4px 0;
+    }
+    .free-paper textarea {
+      resize: vertical;
+      min-height: 100px;
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      padding: 8px;
+      display: block;
+      margin-top: 4px;
+    }
+    .free-paper input:focus, .free-paper textarea:focus { border-color: #7c3aed; }
+
+    /* ── 편지쓰기 마법사 (단계별 슬라이드) ── */
+    .wiz-step {
+      width: 100%;
+      min-width: 100%;
+      max-width: 100%;
+      flex: 0 0 100%;
+      padding: 12px 4px 8px;
+      overflow-y: auto;
+      align-self: stretch;
+    }
+
+    /* ── 편지지 선택 ── */
+    .paper-picker {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .paper-chip {
+      flex: 1;
+      min-width: 80px;
+      border: 2.5px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 10px 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      background: white;
+    }
+    .paper-chip.selected {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+      transform: translateY(-2px);
+    }
+    .paper-chip .paper-swatch {
+      width: 100%;
+      height: 36px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+    .paper-chip .paper-name {
+      font-size: 0.85em;
+      font-weight: bold;
+      color: #475569;
+    }
+    /* 편지지 배경 5종 */
+    .paper-basic {
+      background-color: #fffdf5;
+    }
+    .paper-sky {
+      background-color: #eff8ff;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg fill='%23bae6fd' fill-opacity='0.5'%3E%3Cellipse cx='30' cy='30' rx='18' ry='9'/%3E%3Cellipse cx='42' cy='26' rx='12' ry='7'/%3E%3Cellipse cx='90' cy='80' rx='16' ry='8'/%3E%3Cellipse cx='100' cy='76' rx='10' ry='6'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    .paper-blossom {
+      background-color: #fdf2f8;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cg fill='%23f9a8d4' fill-opacity='0.45'%3E%3Cpath d='M20 15 Q24 8 28 15 Q24 20 20 15Z'/%3E%3Cpath d='M70 40 Q74 33 78 40 Q74 45 70 40Z'/%3E%3Cpath d='M45 75 Q49 68 53 75 Q49 80 45 75Z'/%3E%3Ccircle cx='85' cy='20' r='2.5'/%3E%3Ccircle cx='15' cy='60' r='2'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    .paper-forest {
+      background-color: #f0fdf4;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='110'%3E%3Cg fill='%2386efac' fill-opacity='0.5'%3E%3Cpath d='M20 20 Q30 10 35 25 Q25 30 20 20Z'/%3E%3Cpath d='M80 55 Q90 45 95 60 Q85 65 80 55Z'/%3E%3Cpath d='M50 85 Q60 75 65 90 Q55 95 50 85Z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    .paper-night {
+      background-color: #f5f3ff;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cg fill='%23c4b5fd' fill-opacity='0.6'%3E%3Cpath d='M20 15 l2 5 5 0 -4 4 2 5 -5 -3 -5 3 2 -5 -4 -4 5 0z'/%3E%3Ccircle cx='70' cy='30' r='1.5'/%3E%3Ccircle cx='45' cy='60' r='1.5'/%3E%3Cpath d='M75 70 l1.5 4 4 0 -3 3 1.5 4 -4 -2.5 -4 2.5 1.5 -4 -3 -3 4 0z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    .wiz-step-icon { font-size: 2.8em; text-align: center; margin-bottom: 8px; }
+    .wiz-step-title {
+      font-family: 'Jua', sans-serif;
+      font-size: 1.55em; font-weight: bold;
+      color: #1e293b; text-align: center; margin-bottom: 14px;
+    }
+
+    /* ── 단계 스테퍼: 현재 진행 단계 한눈에 보기 ── */
+    .wiz-stepper {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      flex-shrink: 0;
+      padding: 4px 4px 0;
+    }
+    .wstep {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+    }
+    .wstep-dot {
+      width: 46px; height: 46px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      border: 2.5px solid #e2e8f0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1em;
+      transition: all 0.25s;
+    }
+    .wstep-chk { display: none; color: white; font-weight: bold; font-size: 1.1em; }
+    .wstep-name {
+      font-size: 0.78em;
+      color: #94a3b8;
+      white-space: nowrap;
+      transition: color 0.25s;
+    }
+    /* 현재 단계: 보라 강조 + 살짝 확대 */
+    .wstep.current .wstep-dot {
+      background: linear-gradient(135deg, #ede9fe, #fdf2f8);
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 5px rgba(124,58,237,0.18);
+      transform: scale(1.14);
+    }
+    .wstep.current .wstep-name { color: #7c3aed; font-family: 'Jua', sans-serif; }
+    /* 완료 단계: 초록 체크 (클릭하면 되돌아가기) */
+    .wstep.done { cursor: pointer; }
+    .wstep.done .wstep-dot { background: linear-gradient(135deg, #34d399, #16a34a); border-color: #16a34a; }
+    .wstep.done .wstep-ico { display: none; }
+    .wstep.done .wstep-chk { display: block; }
+    .wstep.done .wstep-name { color: #16a34a; }
+    .wstep.done:hover .wstep-dot { transform: scale(1.08); }
+    /* 단계 사이 연결선 */
+    .wstep-line {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: #e2e8f0;
+      margin-top: 22px;
+      min-width: 8px;
+      transition: background 0.25s;
+    }
+    .wstep-line.fill { background: linear-gradient(90deg, #34d399, #a855f7); }
+
+    /* ── 마법사 단계 좌우 배치: 안내 카드(왼쪽) / 입력 카드(오른쪽) ── */
+    .wiz-step.split {
+      display: flex;
+      gap: 16px;
+      align-items: stretch;
+      padding-top: 6px;
+    }
+    /* 왼쪽: 단계 안내 카드 (라벤더) */
+    .wiz-step.split .wiz-left {
+      flex: 0 0 40%;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: linear-gradient(165deg, #f6f3ff 0%, #fdf2f8 100%);
+      border: 2px solid #e9d5ff;
+      border-radius: 18px;
+      padding: 18px 16px;
+    }
+    .wiz-step.split .wiz-left .wiz-step-icon { font-size: 2em; margin-bottom: 4px; }
+    .wiz-step.split .wiz-left .wiz-step-title { font-size: 1.25em; margin-bottom: 10px; }
+    /* 오른쪽: 입력 카드 (편지지 느낌) */
+    .wiz-step.split .wiz-right {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: #fffdf5;
+      border: 2px solid #fbcfe8;
+      border-radius: 18px;
+      padding: 16px 18px;
+    }
+    .wiz-step.split .wiz-right::before {
+      content: '✍️ 여기에 써보세요';
+      font-family: 'Jua', sans-serif;
+      font-size: 0.95em;
+      color: #be185d;
+      margin-bottom: 10px;
+      flex-shrink: 0;
+    }
+    .wiz-step.split .wiz-right textarea { flex: 1; min-height: 140px; }
+    /* 짧은 한 줄 입력칸 */
+    .wiz-step.split .wiz-right input { min-height: 64px; }
+    .wiz-step.split .wiz-right textarea,
+    .wiz-step.split .wiz-right input {
+      background: white;
+      border: 2px solid #f3e8ff;
+    }
+    .wiz-step.split .wiz-right textarea:focus,
+    .wiz-step.split .wiz-right input:focus { border-color: #a855f7; }
+    /* 안내 카드 속 예시 박스 */
+    .wiz-hint {
+      background: white;
+      border-left: 5px solid #a855f7;
+      padding: 11px 15px;
+      border-radius: 0 12px 12px 0;
+      font-size: 1em; color: #444; margin-bottom: 0; line-height: 1.7;
+      box-shadow: 0 2px 8px rgba(124,58,237,0.08);
+    }
+    /* 한 칸 입력 단계(날짜·보내는 사람)는 가운데 정렬 */
+    .wiz-step:not(.split) { display: flex; flex-direction: column; justify-content: center; }
+    .wiz-step:not(.split) > * {
+      width: min(720px, 100%);
+      margin-left: auto;
+      margin-right: auto;
+      flex-shrink: 0;
+    }
+
+    /* 글자 수 카운터 */
+    .char-counter {
+      text-align: right;
+      font-size: 0.92em;
+      color: #888;
+      margin-bottom: 12px;
+    }
+
+    /* ── 진심 온도계 화면 ── */
+    #sincerityScreen { display: none; }
+    #sincerityScreen.active { display: block; }
+
+    .sincerity-card {
+      background: linear-gradient(135deg, #fff9f0, #fff0f8);
+      border: 2px solid #f5c0c8;
+      border-radius: 20px;
+      padding: 28px 24px 24px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .sincerity-card h2 {
+      font-size: 1.2em;
+      color: #1e293b;
+      margin-bottom: 6px;
+    }
+    .sincerity-card .sub {
+      font-size: 0.88em;
+      color: #64748b;
+      margin-bottom: 0;
+    }
+
+    /* 슬라이더 (진심 온도) */
+    .sincerity-slider-wrap {
+      margin: 20px auto 0;
+      max-width: 360px;
+    }
+    .sincerity-emoji-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.8em;
+      margin-bottom: 6px;
+      user-select: none;
+    }
+    .sincerity-slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 10px;
+      border-radius: 5px;
+      background: linear-gradient(90deg, #f093fb, #f5576c);
+      outline: none;
+      cursor: pointer;
+    }
+    .sincerity-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: white;
+      border: 3px solid #f5576c;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      cursor: pointer;
+    }
+    .sincerity-label {
+      font-size: 1em;
+      font-weight: bold;
+      color: #f5576c;
+      margin-top: 10px;
+      min-height: 1.4em;
+    }
+
+    /* 체크리스트 */
+    .sincerity-checklist {
+      background: white;
+      border-radius: 16px;
+      padding: 26px 32px;
+      margin-bottom: 18px;
+      border: 1.5px solid #e2e8f0;
+      text-align: left;
+    }
+    .sincerity-checklist .cl-title {
+      font-size: 0.92em;
+      font-weight: bold;
+      color: #475569;
+      margin-bottom: 14px;
+    }
+    .sincerity-checklist .cl-title span { color: #f5576c; }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      border: 2px solid #e2e8f0;
+      background: #f8fafc;
+      transition: all 0.18s;
+      user-select: none;
+    }
+    .check-item:last-child { margin-bottom: 0; }
+    .check-item:hover { border-color: #c4b5fd; background: #f5f0ff; }
+    .check-item.checked {
+      border-color: #7c3aed;
+      background: #f0edff;
+    }
+    .check-item .check-box {
+      width: 24px; height: 24px;
+      border-radius: 6px;
+      border: 2px solid #cbd5e1;
+      background: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1em;
+      flex-shrink: 0;
+      transition: all 0.18s;
+    }
+    .check-item.checked .check-box {
+      background: #7c3aed;
+      border-color: #7c3aed;
+      color: white;
+    }
+    .check-item .check-text {
+      font-size: 0.93em;
+      color: #334155;
+      line-height: 1.45;
+    }
+    .check-item.checked .check-text { color: #4c1d95; font-weight: bold; }
+
+    /* ── 결과 화면 ── */
+    #resultScreen { display: none; }
+    #resultScreen.active { display: block; }
+
+    .result-card {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .result-card h2 { font-size: 1.5em; margin-bottom: 8px; }
+
+    .meter-wrap { background: rgba(255,255,255,0.3); border-radius: 20px; height: 28px; overflow: hidden; margin: 14px 0 8px; }
+    .meter-fill {
+      height: 100%;
+      background: white;
+      border-radius: 20px;
+      width: 0%;
+      transition: width 1s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #f5576c;
+      font-size: 0.9em;
+    }
+
+    .stamp-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 12px 0;
+    }
+    .stamp {
+      width: 50px; height: 50px;
+      border: 3px dashed #e0e0e0;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8em;
+      background: #f9f9f9;
+    }
+    .stamp.earned { border-color: #f5576c; background: #fff0f0; }
+
+    /* ── 버튼 ── */
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1em;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .btn-primary  { background: linear-gradient(135deg, #7c3aed, #5b21b6); color: white; }
+    .btn-secondary{ background: #f0f0f0; color: #333; }
+    .btn:hover    { opacity: 0.88; transform: translateY(-1px); }
+    .btn-group    { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+    .btn-group .btn { flex: 1; }
+
+    /* 저장 중 오버레이 */
+    #savingOverlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+    }
+    #savingOverlay.show { display: flex; }
+    .saving-box {
+      background: white;
+      border-radius: 16px;
+      padding: 32px 40px;
+      text-align: center;
+      font-size: 1.1em;
+    }
+    .saving-box .spinner {
+      font-size: 2.5em;
+      animation: spin 1s linear infinite;
+      display: block;
+      margin-bottom: 12px;
+    }
+    @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+    /* ── 우편함 ── */
+    .mail-item {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-left: 4px solid #7c3aed;
+    }
+    .mail-item .meta { font-size: 0.82em; color: #888; margin-bottom: 6px; }
+    .mail-item .score-badge {
+      display: inline-block;
+      background: #7c3aed;
+      color: white;
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 0.8em;
+      font-weight: bold;
+      margin-left: 8px;
+    }
+
+    /* ── 인트로 화면 ── */
+    #introScreen {
+      padding: 8px 0 10px;
+      animation: fadeIn 0.4s ease;
+    }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+    .intro-hero {
+      text-align: center;
+      padding: 24px 16px 20px;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      border-radius: 18px;
+      color: white;
+      margin-bottom: 20px;
+    }
+    .intro-hero .hero-icon { font-size: 3.4em; display: block; margin-bottom: 10px; }
+    .intro-hero h2 { font-size: 1.5em; margin-bottom: 8px; }
+    .intro-hero p  { font-size: 1em; opacity: 0.92; line-height: 1.7; }
+
+    /* 활동 목적 카드 */
+    .intro-purpose {
+      background: #fffbf0;
+      border-left: 6px solid #f5576c;
+      border-radius: 0 14px 14px 0;
+      padding: 20px 22px;
+      margin-bottom: 18px;
+      font-size: 1.1em;
+      line-height: 2;
+      color: #1e293b;
+    }
+    .intro-purpose .label {
+      font-size: 1.05em;
+      font-weight: bold;
+      color: #f5576c;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+
+    /* 단계 카드 */
+    .intro-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .step-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: white;
+      border-radius: 14px;
+      padding: 14px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      border: 1.5px solid #f0f0f0;
+    }
+    .step-num {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      color: white;
+      font-size: 1.1em;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-card .step-icon { font-size: 2em; flex-shrink: 0; }
+    .step-body { flex: 1; }
+    .step-body strong { display: block; font-size: 1.15em; color: #1e293b; margin-bottom: 5px; }
+    .step-body span { font-size: 1em; color: #64748b; line-height: 1.7; }
+
+    /* 오늘의 미션 */
+    .intro-mission {
+      background: linear-gradient(135deg, #f0edff, #fdf2f8);
+      border: 2px solid #c4b5fd;
+      border-radius: 16px;
+      padding: 16px 18px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .intro-mission .mission-label {
+      font-size: 0.88em;
+      font-weight: bold;
+      color: #7c3aed;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+    .intro-mission .mission-text {
+      font-size: 1.3em;
+      font-weight: bold;
+      color: #4c1d95;
+      line-height: 1.8;
+    }
+
+    /* ── 개념학습 엽서 모달 ── */
+    #conceptModal {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(60,30,20,0.6);
+      backdrop-filter: blur(3px);
+      z-index: 800;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 18px;
+    }
+    #conceptModal.show { display: flex; }
+
+    /* 닫기 버튼이 잘리지 않도록 엽서를 감싸는 래퍼 (overflow 없음) */
+    .postcard-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 1000px;
+      height: 100%;
+      max-height: calc(100vh - 56px);
+      display: flex;
+    }
+
+    .postcard {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      background:
+        linear-gradient(#fffdf3, #fffdf3) padding-box,
+        repeating-linear-gradient(45deg, #f5576c 0, #f5576c 12px, #fff 12px, #fff 24px, #f093fb 24px, #f093fb 36px, #fff 36px, #fff 48px) border-box;
+      border: 8px solid transparent;
+      border-radius: 18px;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.4);
+      position: relative;
+      overflow: hidden;
+    }
+    /* 엽서 종이 질감 - 옅은 격자 */
+    .postcard::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(212,163,115,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(212,163,115,0.06) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .postcard-stripe { display: none; }
+
+    /* 엽서 헤더 (우표 + 제목) */
+    .postcard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 28px 16px;
+      border-bottom: 2px dashed #e0b88a;
+      position: relative;
+      z-index: 1;
+    }
+    .postcard-title {
+      font-family: 'Jua', sans-serif;
+      font-size: 1.8em;
+      color: #c2410c;
+      letter-spacing: 0.02em;
+      text-shadow: 1px 1px 0 #fff;
+    }
+    /* 귀여운 우표 */
+    .postcard-stamp {
+      width: 80px; height: 94px;
+      border-radius: 4px;
+      background:
+        linear-gradient(135deg, #fda4af, #f5576c);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 2.6em;
+      position: relative;
+      transform: rotate(6deg);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.18);
+      /* 우표 톱니 테두리 */
+      -webkit-mask:
+        radial-gradient(circle 5px at 0 50%, transparent 4px, #000 4.5px) -5px 0/100% 16px,
+        radial-gradient(circle 5px at 100% 50%, transparent 4px, #000 4.5px) 5px 0/100% 16px,
+        radial-gradient(circle 5px at 50% 0, transparent 4px, #000 4.5px) 0 -5px/16px 100%,
+        radial-gradient(circle 5px at 50% 100%, transparent 4px, #000 4.5px) 0 5px/16px 100%;
+      -webkit-mask-composite: source-in;
+      mask-composite: intersect;
+    }
+    .postcard-stamp small { display: none; }
+
+    /* 헤더·푸터 고정 */
+    .postcard-header { flex-shrink: 0; }
+    .postcard-footer { flex-shrink: 0; }
+
+    /* 엽서 슬라이드 본문 - 남은 공간 채우고 스크롤 없이 잘라냄 */
+    .postcard-body {
+      padding: 0;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+    }
+    .postcard-slide-area { overflow: hidden; flex: 1; display: flex; min-width: 0; }
+    .postcard-track {
+      display: flex;
+      transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+      width: 100%;
+      flex: none;
+      min-width: 0;
+    }
+    .postcard-slide {
+      width: 100%;
+      min-width: 100%;
+      max-width: 100%;
+      flex: 0 0 100%;
+      padding: 18px 28px;
+      font-size: 1.1em;
+      line-height: 1.7;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    /* 슬라이드 내부 flex 항목이 폭을 밀어내지 않도록 (인라인 min-width는 그대로 우선됨) */
+    .postcard-slide div { min-width: 0; }
+
+    /* 엽서 하단 */
+    .postcard-footer {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 24px;
+      border-top: 2px dashed #e0b88a;
+      position: relative;
+      z-index: 1;
+    }
+    .pc-btn-prev, .pc-btn-next {
+      padding: 13px 20px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1.1em;
+      flex: 1;
+    }
+    .pc-btn-prev { background: #fce7d6; color: #9a3412; }
+    .pc-btn-next { background: linear-gradient(135deg,#7c3aed,#a855f7); color:white; box-shadow: 0 4px 12px rgba(124,58,237,0.35); }
+    .pc-btn-next.go-write { background: linear-gradient(135deg,#f093fb,#f5576c); box-shadow: 0 4px 12px rgba(245,87,108,0.35); }
+    .pc-btn-prev:disabled { opacity:0.35; cursor:default; }
+
+    /* 닫기 버튼 — 크고 또렷하게 (postcard-wrap 기준, 잘리지 않음) */
+    .pc-close {
+      position: absolute;
+      top: -16px; right: -16px;
+      background: #f5576c;
+      border: 4px solid #fff;
+      border-radius: 50%;
+      width: 52px; height: 52px;
+      color: white;
+      font-size: 1.5em;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 5px 16px rgba(0,0,0,0.35);
+      z-index: 30;
+      transition: transform 0.15s;
+      line-height: 1;
+    }
+    .pc-close:hover { transform: scale(1.1) rotate(90deg); background: #e11d48; }
+
+    /* 엽서 진행 점 */
+    .pc-dots {
+      display: flex; gap: 6px; justify-content: center; flex: 0 0 auto; padding: 0 10px;
+    }
+    .pc-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #e0b88a;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .pc-dot.active { width: 22px; border-radius: 4px; background: #c2410c; }
+
+    .slide-progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .slide-progress-dots {
+      display: flex;
+      gap: 6px;
+      flex: 1;
+      justify-content: center;
+    }
+    .prog-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      transition: all 0.25s;
+      cursor: pointer;
+    }
+    .prog-dot.active {
+      width: 22px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #f093fb, #f5576c);
+    }
+    .slide-counter {
+      font-size: 0.78em;
+      color: #94a3b8;
+      white-space: nowrap;
+    }
+
+    /* 슬라이드 본체 */
+    .slide-viewport {
+      overflow: hidden;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+    .slide-track {
+      display: flex;
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .slide {
+      min-width: 100%;
+      background: white;
+      border-radius: 20px;
+      border: 1.5px solid #f0f0f0;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+      overflow: hidden;
+    }
+
+    /* ── 슬라이드 헤더 띠 ── */
+    .sl-band {
+      padding: 20px 22px 16px;
+      color: white;
+      text-align: center;
+    }
+    .sl-band .sl-icon  { font-size: 2.6em; display: block; margin-bottom: 8px; }
+    .sl-band .sl-title { font-size: 1.25em; font-weight: bold; margin-bottom: 4px; }
+    .sl-band .sl-sub   { font-size: 0.95em; opacity: 0.9; }
+
+    /* 슬라이드 본문 */
+    .sl-body { padding: 22px 24px 24px; font-size: 1em; }
+
+    /* 원칙 아이템 */
+    .principle-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      background: #f8fafc;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      border-left: 4px solid transparent;
+    }
+    .principle-item .pi-icon { font-size: 1.5em; flex-shrink: 0; }
+    .principle-item .pi-text strong { display: block; font-size: 1em; color: #1e293b; margin-bottom: 3px; }
+    .principle-item .pi-text span   { font-size: 0.9em; color: #64748b; line-height: 1.6; }
+
+    /* 구조 단계 */
+    .structure-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+    }
+    .ss-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: white;
+      font-size: 0.9em;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .ss-name { font-size: 1em; font-weight: bold; color: #1e293b; min-width: 100px; }
+    .ss-ex   { font-size: 0.9em; color: #64748b; }
+
+    /* 비교 박스 */
+    .compare-row { display: flex; gap: 10px; }
+    .compare-box {
+      flex: 1;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 0.92em;
+      line-height: 1.75;
+    }
+    .compare-box .cb-title {
+      font-weight: bold;
+      font-size: 0.95em;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .cb-bad  { background: #fef2f2; border: 1.5px solid #fca5a5; }
+    .cb-good { background: #f0fdf4; border: 1.5px solid #86efac; }
+    .cb-bad .cb-title  { color: #dc2626; }
+    .cb-good .cb-title { color: #16a34a; }
+
+    /* 편지 유형 미니 카드 */
+    .type-mini-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .type-mini {
+      background: #fef9ec;
+      border-radius: 12px;
+      padding: 14px 10px;
+      text-align: center;
+      border: 1.5px solid #f5c0a8;
+    }
+    .type-mini .tm-icon { font-size: 2em; display: block; margin-bottom: 5px; }
+    .type-mini .tm-name { font-size: 0.95em; font-weight: bold; color: #1e293b; }
+    .type-mini .tm-desc { font-size: 0.82em; color: #64748b; margin-top: 3px; }
+
+    /* 슬라이드 하단 네비 */
+    .slide-nav {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .sl-btn-prev, .sl-btn-next {
+      padding: 15px 24px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1.1em;
+      transition: opacity 0.2s;
+      flex: 1;
+    }
+    .sl-btn-prev { background: #f1f5f9; color: #475569; }
+    .sl-btn-next { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; }
+    .sl-btn-prev:disabled { opacity: 0.3; cursor: default; }
+    .sl-btn-next.finish   { background: linear-gradient(135deg, #f093fb, #f5576c); }
+    .sl-skip {
+      font-size: 0.92em;
+      color: #94a3b8;
+      cursor: pointer;
+      text-decoration: underline;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    /* ── 공유 링크 박스 ── */
+    .share-box {
+      background: #f0fdf4;
+      border: 1.5px solid #86efac;
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 16px;
+    }
+    .share-box .share-title {
+      font-size: 0.88em;
+      font-weight: bold;
+      color: #166534;
+      margin-bottom: 10px;
+    }
+    .share-url-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .share-url-text {
+      flex: 1;
+      padding: 9px 12px;
+      border: 1.5px solid #bbf7d0;
+      border-radius: 8px;
+      font-size: 0.78em;
+      color: #15803d;
+      background: white;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-family: monospace;
+    }
+    .copy-btn {
+      padding: 9px 16px;
+      background: #22c55e;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85em;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .copy-btn:active { opacity: 0.75; }
+
+    /* ── 인쇄 영역 (화면에는 숨김) ── */
+    #printArea { display: none; }
+
+    /* ── 인쇄 스타일 ── */
+    @media print {
+      /* 인쇄 시 앱 UI 전부 숨김 */
+      body > * { display: none !important; }
+      #printArea {
+        display: block !important;
+        font-family: 'Malgun Gothic', 'Nanum Gothic', sans-serif;
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .pl-envelope {
+        border: 3px solid #f5576c;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: none;
+      }
+      .pl-flap {
+        height: 70px;
+        background: linear-gradient(160deg, #f093fb, #f5576c);
+        clip-path: polygon(0 0, 100% 0, 50% 100%);
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 10px;
+        color: white;
+        font-size: 1.4em;
+      }
+      .pl-body {
+        padding: 30px 36px 24px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .pl-to {
+        font-size: 0.9em;
+        color: #888;
+        margin-bottom: 4px;
+        border-bottom: 1px dashed #e2e8f0;
+        padding-bottom: 10px;
+        margin-bottom: 16px;
+      }
+      .pl-to strong { font-size: 1.2em; color: #1e293b; }
+      .pl-content {
+        font-size: 1em;
+        line-height: 2;
+        color: #1e293b;
+        white-space: pre-wrap;
+        min-height: 180px;
+        margin-bottom: 24px;
+      }
+      .pl-from {
+        text-align: right;
+        font-size: 0.9em;
+        color: #64748b;
+        border-top: 1px dashed #e2e8f0;
+        padding-top: 12px;
+      }
+      .pl-from strong { color: #1e293b; font-size: 1em; }
+      .pl-stripe {
+        height: 8px;
+        background: repeating-linear-gradient(
+          -45deg, #f5576c, #f5576c 4px, #f093fb 4px, #f093fb 10px
+        );
+      }
+    }
+
+    /* ── 탭·화면 공간 분배 (스크롤 없음, 여백 최소) ── */
+    #tabArea { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+    #tab-write {
+      flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden;
+    }
+    #tab-mailbox, #tab-guide, #tab-concept {
+      flex: 1; overflow-y: auto; min-height: 0;
+    }
+    #introScreen { flex: 1; overflow: hidden; min-height: 0; display: flex; flex-direction: column; }
+
+    /* typeSelection이 공간 채우기 */
+    #typeSelection { flex: 1; min-height: 0; overflow-y: auto; }
+    /* workspace가 활성화되면 typeSelection 숨김 */
+    #tab-write:has(.letter-workspace.active) #typeSelection { display: none !important; }
+
+    /* 워크스페이스가 공간 채우기 */
+    .letter-workspace.active {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0;
+    }
+    #sincerityScreen.active  { flex: 1; overflow-y: auto; }
+    #resultScreen            { flex: 1; overflow-y: auto; }
+
+  </style>
+</head>
+<body>
+
+<!-- ── 인쇄 전용 영역 (화면에는 숨겨짐, 인쇄 시에만 보임) ── -->
+<div id="printArea">
+  <div class="pl-envelope">
+    <div class="pl-flap">💌</div>
+    <div class="pl-body">
+      <div class="pl-to"><strong id="pl-recipient"></strong></div>
+      <div class="pl-content" id="pl-content"></div>
+      <div class="pl-from">
+        <div id="pl-date"></div>
+        <strong id="pl-sender"></strong>
+      </div>
+    </div>
+    <div class="pl-stripe"></div>
+  </div>
+</div>
+
+<!-- ── 개념학습 엽서 모달 ── -->
+<div id="conceptModal">
+  <div class="postcard-wrap">
+    <button class="pc-close" onclick="closeConceptModal()">✕</button>
+    <div class="postcard">
+
+    <div class="postcard-header">
+      <div class="postcard-title">💌 편지란?</div>
+      <div class="postcard-stamp">💌</div>
+    </div>
+
+    <div class="postcard-body">
+      <div class="postcard-slide-area">
+        <div class="postcard-track" id="pcTrack">
+
+          <!-- 슬라이드 1 -->
+          <div class="postcard-slide">
+            <div style="font-size:1.55em;font-weight:bold;color:#8b0000;margin-bottom:16px;font-family:'Jua',sans-serif;">편지가 뭔가요? 📮</div>
+            <div style="font-size:1.2em;font-weight:bold;color:#1e293b;margin-bottom:14px;line-height:1.9;">
+              편지는 내 <span style="color:#f5576c;">마음</span>을 글로 써서 상대방에게 <span style="color:#7c3aed;">직접 전하는</span> 방법이에요.
+            </div>
+            <div style="background:#fdf2f8;border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+              <div style="font-size:0.88em;font-weight:bold;color:#be185d;margin-bottom:8px;">💬 오늘 연습해볼 상황들</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                <span style="background:#f5576c;color:white;border-radius:20px;padding:5px 14px;font-size:0.9em;">🙏 고마움</span>
+                <span style="background:#a855f7;color:white;border-radius:20px;padding:5px 14px;font-size:0.9em;">🎉 축하</span>
+                <span style="background:#3b82f6;color:white;border-radius:20px;padding:5px 14px;font-size:0.9em;">💝 위로</span>
+                <span style="background:#22c55e;color:white;border-radius:20px;padding:5px 14px;font-size:0.9em;">🎈 초대</span>
+                <span style="background:#f97316;color:white;border-radius:20px;padding:5px 14px;font-size:0.9em;">🙇 사과</span>
+                <span style="background:#64748b;color:white;border-radius:20px;padding:5px 14px;font-size:0.9em;">✍️ 나만의 마음</span>
+              </div>
+              <div style="margin-top:8px;font-size:0.85em;color:#be185d;">💡 어떤 마음이든 편지로 전할 수 있어요!</div>
+            </div>
+            <div style="background:#f0fdf4;border-radius:10px;padding:12px 14px;font-size:0.95em;color:#166534;border-left:4px solid #22c55e;">
+              ✨ 말로 전하기 어려운 마음도 편지에 쓰면 더 잘 전달돼요!
+            </div>
+          </div>
+
+          <!-- 슬라이드 2 -->
+          <div class="postcard-slide">
+            <div style="font-size:1.55em;font-weight:bold;color:#8b0000;margin-bottom:16px;font-family:'Jua',sans-serif;">편지 쓰기의 기본 원칙 💡</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;align-items:flex-start;gap:12px;background:#f8fafc;border-radius:12px;padding:13px;border-left:4px solid #f5576c;">
+                <span style="font-size:1.5em;">👤</span>
+                <div><strong style="display:block;font-size:1.15em;color:#f5576c;margin-bottom:6px;">편지를 받는 사람을 생각하세요</strong>
+                <span style="font-size:1em;color:#475569;">선생님께 쓸 때와 <span style="color:#7c3aed;font-weight:bold;">친구에게 쓸 때</span>는 말투가 달라야 해요.</span></div>
+              </div>
+              <div style="display:flex;align-items:flex-start;gap:12px;background:#f8fafc;border-radius:12px;padding:13px;border-left:4px solid #7c3aed;">
+                <span style="font-size:1.5em;">🎯</span>
+                <div><strong style="display:block;font-size:1.15em;color:#7c3aed;margin-bottom:6px;">목적을 명확히 하세요</strong>
+                <span style="font-size:1em;color:#475569;"><span style="color:#f5576c;font-weight:bold;">감사</span>인지, <span style="color:#3b82f6;font-weight:bold;">위로</span>인지, <span style="color:#f97316;font-weight:bold;">사과</span>인지 — 왜 쓰는지 분명히 해요.</span></div>
+              </div>
+              <div style="display:flex;align-items:flex-start;gap:12px;background:#f8fafc;border-radius:12px;padding:13px;border-left:4px solid #22c55e;">
+                <span style="font-size:1.5em;">💖</span>
+                <div><strong style="display:block;font-size:1.15em;color:#22c55e;margin-bottom:6px;">진심을 담으세요</strong>
+                <span style="font-size:1em;color:#475569;"><span style="color:#94a3b8;">"고마워요"</span>보다 <span style="color:#16a34a;font-weight:bold;">"숙제를 도와줘서 고마워요"</span>가 훨씬 좋아요.</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 슬라이드 3 -->
+          <div class="postcard-slide">
+            <div style="font-size:1.55em;font-weight:bold;color:#8b0000;margin-bottom:16px;font-family:'Jua',sans-serif;">편지의 기본 구조 ✏️</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <div style="display:flex;align-items:center;gap:12px;padding:6px 12px;">
+                <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#f093fb,#f5576c);color:white;font-size:0.9em;font-weight:bold;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+                <div style="font-weight:bold;color:#1e293b;min-width:120px;">받는 사람</div>
+                <div style="color:#64748b;">예: "어머니께", "○○○ 선생님께"</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:6px 12px;">
+                <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#f093fb,#f5576c);color:white;font-size:0.9em;font-weight:bold;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+                <div style="font-weight:bold;color:#1e293b;min-width:120px;">인사말</div>
+                <div style="color:#64748b;">예: "안녕하세요", "잘 지내고 있어?"</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:6px 12px;">
+                <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#f093fb,#f5576c);color:white;font-size:0.9em;font-weight:bold;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+                <div style="font-weight:bold;color:#1e293b;min-width:120px;">전하고 싶은 말</div>
+                <div style="color:#64748b;">하고 싶은 말을 구체적으로 써요</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:6px 12px;">
+                <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#f093fb,#f5576c);color:white;font-size:0.9em;font-weight:bold;display:flex;align-items:center;justify-content:center;flex-shrink:0;">4</div>
+                <div style="font-weight:bold;color:#1e293b;min-width:120px;">끝인사</div>
+                <div style="color:#64748b;">예: "항상 건강하세요", "그럼 안녕!"</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:6px 12px;">
+                <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#f093fb,#f5576c);color:white;font-size:0.9em;font-weight:bold;display:flex;align-items:center;justify-content:center;flex-shrink:0;">5</div>
+                <div style="font-weight:bold;color:#1e293b;min-width:120px;">날짜와 이름</div>
+                <div style="color:#64748b;">예: "2025년 4월 22일, ○○ 올림"</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:6px 12px;">
+                <div style="width:30px;height:30px;border-radius:50%;background:#facc15;color:white;font-size:0.85em;font-weight:bold;display:flex;align-items:center;justify-content:center;flex-shrink:0;">+</div>
+                <div style="font-weight:bold;color:#854d0e;min-width:120px;">추신 <span style="font-size:0.8em;color:#a16207;">(선택)</span></div>
+                <div style="color:#a16207;">덧붙이고 싶은 말이 있을 때만 써요</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 슬라이드 4 -->
+          <div class="postcard-slide">
+            <div style="font-size:1.55em;font-weight:bold;color:#8b0000;margin-bottom:16px;font-family:'Jua',sans-serif;">마음이 덜·잘 전달된 편지 🔍</div>
+            <div style="font-size:1em;font-weight:bold;color:#475569;text-align:center;margin-bottom:12px;">🙏 감사 편지를 쓸 때</div>
+            <div style="display:flex;gap:10px;margin-bottom:12px;">
+              <div style="flex:1;background:#fef2f2;border-radius:12px;padding:14px;border:1.5px solid #fca5a5;">
+                <div style="font-weight:bold;font-size:0.95em;color:#dc2626;margin-bottom:8px;">😶 덜 전달된 편지</div>
+                <div style="font-size:1em;line-height:1.85;color:#64748b;">선생님, 도와주셔서 감사합니다. 앞으로도 잘 부탁드려요.</div>
+              </div>
+              <div style="flex:1;background:#f0fdf4;border-radius:12px;padding:14px;border:1.5px solid #86efac;">
+                <div style="font-weight:bold;font-size:0.95em;color:#16a34a;margin-bottom:8px;">💖 잘 전달된 편지</div>
+                <div style="font-size:1em;line-height:1.85;">선생님, 수학 문제를 <span style="color:#16a34a;font-weight:bold;">모를 때 옆에서 같이 풀어주셔서</span> 정말 감사해요. <span style="color:#7c3aed;font-weight:bold;">덕분에 혼자서도 풀 수 있게</span> 됐어요!</div>
+              </div>
+            </div>
+            <div style="background:#fef9ec;border-radius:10px;padding:12px 14px;font-size:0.92em;color:#92400e;border-left:4px solid #f97316;">
+              💡 <strong>"무엇에 대해"</strong> + <strong>"나에게 어떤 의미"</strong>를 담으면 마음이 잘 전달돼요!
+            </div>
+          </div>
+
+          <!-- 슬라이드 5 -->
+          <div class="postcard-slide">
+            <div style="font-size:1.55em;font-weight:bold;color:#8b0000;margin-bottom:16px;font-family:'Jua',sans-serif;">오늘 쓸 수 있는 편지 5가지 📮</div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+              <div style="flex:1;background:#fef9ec;border-radius:12px;padding:12px 8px;text-align:center;border:1.5px solid #f5c0a8;">
+                <div style="font-size:2em;margin-bottom:4px;">🙏</div>
+                <div style="font-size:0.95em;font-weight:bold;color:#1e293b;">감사</div>
+                <div style="font-size:0.78em;color:#64748b;margin-top:3px;">고마운 마음</div>
+              </div>
+              <div style="flex:1;background:#fef9ec;border-radius:12px;padding:12px 8px;text-align:center;border:1.5px solid #f5c0a8;">
+                <div style="font-size:2em;margin-bottom:4px;">🎉</div>
+                <div style="font-size:0.95em;font-weight:bold;color:#1e293b;">축하</div>
+                <div style="font-size:0.78em;color:#64748b;margin-top:3px;">함께 기뻐요</div>
+              </div>
+              <div style="flex:1;background:#fef9ec;border-radius:12px;padding:12px 8px;text-align:center;border:1.5px solid #f5c0a8;">
+                <div style="font-size:2em;margin-bottom:4px;">💝</div>
+                <div style="font-size:0.95em;font-weight:bold;color:#1e293b;">위로</div>
+                <div style="font-size:0.78em;color:#64748b;margin-top:3px;">용기 북돋기</div>
+              </div>
+              <div style="flex:1;background:#fef9ec;border-radius:12px;padding:12px 8px;text-align:center;border:1.5px solid #f5c0a8;">
+                <div style="font-size:2em;margin-bottom:4px;">🎈</div>
+                <div style="font-size:0.95em;font-weight:bold;color:#1e293b;">초대</div>
+                <div style="font-size:0.78em;color:#64748b;margin-top:3px;">함께해요</div>
+              </div>
+              <div style="flex:1;background:#fef9ec;border-radius:12px;padding:12px 8px;text-align:center;border:1.5px solid #f5c0a8;">
+                <div style="font-size:2em;margin-bottom:4px;">🙇</div>
+                <div style="font-size:0.95em;font-weight:bold;color:#1e293b;">사과</div>
+                <div style="font-size:0.78em;color:#64748b;margin-top:3px;">진심 사과</div>
+              </div>
+            </div>
+            <div style="background:#f0fdf4;border-radius:10px;padding:12px 14px;font-size:0.92em;color:#166534;border-left:4px solid #22c55e;">
+              💡 이 밖에도 무궁무진해요! <strong>"나만의 편지"</strong>로 직접 마음을 정해 쓸 수도 있어요.
+            </div>
+          </div>
+
+          <!-- 슬라이드 6 -->
+          <div class="postcard-slide" style="text-align:center;">
+            <div style="font-size:1.3em;font-weight:bold;color:#8b0000;margin-bottom:16px;font-family:'Jua',sans-serif;">준비됐나요? 🚀</div>
+            <div style="font-size:1.05em;font-weight:bold;color:#1e293b;margin-bottom:18px;line-height:1.8;">
+              배운 내용을 떠올리면서<br>
+              <span style="color:#f5576c;">진심이 담긴 편지</span>를 써봐요!
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;text-align:left;margin-bottom:4px;">
+              <div style="background:#f0fdf4;border-radius:10px;padding:11px 14px;font-size:0.95em;color:#166534;border-left:3px solid #22c55e;">✅ 받는 사람을 떠올리며 써요</div>
+              <div style="background:#f0fdf4;border-radius:10px;padding:11px 14px;font-size:0.95em;color:#166534;border-left:3px solid #22c55e;">✅ 구체적인 상황을 담아요</div>
+              <div style="background:#f0fdf4;border-radius:10px;padding:11px 14px;font-size:0.95em;color:#166534;border-left:3px solid #22c55e;">✅ 솔직하게, 진심을 담아요</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="postcard-footer">
+      <button class="pc-btn-prev" id="pcPrev" onclick="prevPCSlide()" disabled>← 이전</button>
+      <div class="pc-dots" id="pcDots"></div>
+      <button class="pc-btn-next" id="pcNext" onclick="nextPCSlide()">다음 →</button>
+    </div>
+    </div><!-- /postcard -->
+  </div><!-- /postcard-wrap -->
+</div>
+
+<!-- ── 내가 쓴 편지 다시 보기 모달 ── -->
+<div id="letterReviewModal" style="display:none;position:fixed;inset:0;background:rgba(60,30,20,0.6);backdrop-filter:blur(3px);z-index:850;align-items:center;justify-content:center;padding:24px 16px;">
+  <div style="width:100%;max-width:780px;background:#fffdf9;border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,0.4);position:relative;">
+    <button onclick="closeWrittenLetter()" style="position:absolute;top:-14px;right:-14px;background:#f5576c;border:3px solid #fff;border-radius:50%;width:44px;height:44px;color:white;font-size:1.4em;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:10;line-height:1;">✕</button>
+
+    <div style="background:linear-gradient(135deg,#f093fb,#f5576c);padding:16px 24px;color:white;text-align:center;border-radius:16px 16px 0 0;">
+      <div style="font-family:'Jua',sans-serif;font-size:1.4em;">💌 내가 쓴 편지</div>
+    </div>
+
+    <!-- 편지가 들어갈 고정 높이 영역 (이 안에서 scale로 맞춤) -->
+    <div id="review-stage" style="height:70vh;overflow:hidden;display:flex;align-items:flex-start;justify-content:center;padding:14px;">
+      <!-- 실제 편지 (scale 대상) -->
+      <div id="review-paper" class="paper-basic" style="width:700px;padding:32px 38px;border-radius:10px;transform-origin:top center;">
+        <div style="font-size:1.15em;color:#94a3b8;margin-bottom:18px;border-bottom:1px dashed #e2e8f0;padding-bottom:12px;">
+          <strong id="review-recipient" style="color:#1e293b;font-size:1.25em;"></strong>
+        </div>
+        <div id="review-content" style="font-size:1.25em;line-height:2.1;color:#1e293b;white-space:pre-wrap;word-break:keep-all;min-height:120px;"></div>
+        <div style="text-align:right;margin-top:22px;border-top:1px dashed #e2e8f0;padding-top:14px;color:#64748b;font-size:1.1em;">
+          <div id="review-date" style="margin-bottom:4px;"></div>
+          <strong id="review-sender" style="color:#1e293b;"></strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- 긴 편지일 때 스크롤 안내 -->
+    <div id="reviewScrollHint" style="display:none;text-align:center;font-size:0.85em;color:#f5576c;font-weight:bold;padding:2px 0 0;">
+      ⬇️ 아래로 내려서 끝까지 읽어보세요
+    </div>
+
+    <div style="padding:16px 24px;border-top:2px dashed #f5c0c8;display:flex;gap:10px;">
+      <button id="reviewEditBtn" onclick="reviseFromPreview()" style="display:none;flex:1;background:white;color:#7c3aed;border:2px solid #c4b5fd;border-radius:12px;padding:14px;font-family:inherit;font-size:1.05em;cursor:pointer;">
+        ✏️ 고쳐 쓸래요
+      </button>
+      <button id="reviewCloseBtn" onclick="closeWrittenLetter()" style="flex:1;background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;border:none;border-radius:12px;padding:14px;font-family:inherit;font-size:1.1em;cursor:pointer;">
+        다 읽었어요! 👍
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="loginScreen">
+  <div class="envelope-card">
+
+    <!-- 봉투 상단 덮개 삼각형 -->
+    <div class="env-flap"></div>
+
+    <!-- 💌 아이콘 (삼각형 꼭짓점) -->
+    <div class="env-icon">💌</div>
+
+    <!-- Heart Post 로고 뱃지 -->
+    <div class="env-logo-pill">💌 Heart Post</div>
+
+    <!-- 봉투 내용 -->
+    <div class="env-body">
+      <h1 class="env-title">마음 전달 우체국</h1>
+      <p class="env-subtitle">이름을 골라 우체부로 등록해 주세요!</p>
+
+      <!-- 이름 선택 단계 (드롭다운 로그인) -->
+      <div id="stepInput">
+        <div class="login-label">👤 내 이름을 골라 주세요</div>
+        <select id="loginSelect" class="login-input" style="cursor:pointer;background:white;">
+          <option value="">명단을 불러오는 중...</option>
+        </select>
+        <button class="btn btn-primary" style="width:100%;padding:17px;font-size:1.15em;"
+                onclick="doLogin()">💌 우체국 입장하기</button>
+        <div id="loginError" style="display:none;margin-top:12px;padding:12px 16px;background:#fee2e2;border-radius:10px;color:#991b1b;font-size:0.95em;text-align:center;"></div>
+      </div>
+
+      <!-- 데모 모드 안내 배지 (연동되면 자동 숨김) -->
+      <div id="demoBadge" style="display:none;margin-top:14px;padding:10px 14px;background:#fef9c3;border-radius:10px;color:#854d0e;font-size:0.85em;text-align:center;line-height:1.6;">
+        지금은 체험(데모) 모드예요. 기록이 이 기기에만 저장돼요.
+      </div>
+
+      <!-- ⚙️ 선생님 메뉴 — 학생 링크(#c=) 접속 시 화면에서 아예 제거됨 -->
+      <div id="teacherMenuWrap" style="margin-top:14px;text-align:center;">
+        <button onclick="toggleTeacherMenu()" style="background:none;border:none;color:#94a3b8;font-size:0.85em;cursor:pointer;font-family:inherit;padding:6px 10px;">⚙️ 선생님 메뉴</button>
+        <div id="teacherMenuPanel" style="display:none;margin-top:10px;padding:16px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;text-align:left;">
+          <div style="font-size:0.85em;color:#475569;line-height:1.7;margin-bottom:10px;">
+            우리 반 시트의 웹앱 주소(exec)를 연결하면<br>학생 기록이 구글 시트에 저장됩니다.
+          </div>
+          <input id="execUrlInput" type="text" placeholder="https://script.google.com/.../exec"
+                 style="width:100%;padding:11px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:0.85em;margin-bottom:8px;">
+          <div style="display:flex;gap:8px;">
+            <button onclick="connectSheet()" style="flex:1;padding:11px;background:#7c3aed;color:white;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:0.9em;">연결하기</button>
+            <button id="disconnectBtn" onclick="disconnectSheet()" style="flex:1;padding:11px;background:white;color:#64748b;border:1.5px solid #e2e8f0;border-radius:8px;cursor:pointer;font-family:inherit;font-size:0.9em;display:none;">연결 해제</button>
+          </div>
+          <div id="tmStatus" style="margin-top:10px;font-size:0.85em;line-height:1.6;"></div>
+          <div id="studentLinkBox" style="display:none;margin-top:10px;">
+            <div style="font-size:0.82em;color:#475569;margin-bottom:6px;">학생용 접속 링크</div>
+            <div id="studentLinkText" style="background:white;border:1.5px dashed #c4b5fd;border-radius:8px;padding:10px;font-size:0.75em;color:#334155;word-break:break-all;margin-bottom:8px;"></div>
+            <button onclick="copyStudentLink()" style="width:100%;padding:11px;background:#16a34a;color:white;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:0.9em;">학생 링크 복사</button>
+
+            <div style="font-size:0.82em;color:#475569;margin:14px 0 6px;">선생님 대시보드 링크 (선생님만 쓰세요)</div>
+            <div id="teacherLinkText" style="background:white;border:1.5px dashed #fbbf24;border-radius:8px;padding:10px;font-size:0.75em;color:#334155;word-break:break-all;margin-bottom:8px;"></div>
+            <div style="display:flex;gap:8px;">
+              <button onclick="copyTeacherLink()" style="flex:1;padding:11px;background:#f59e0b;color:white;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:0.9em;">대시보드 링크 복사</button>
+              <button onclick="openTeacherDash()" style="flex:1;padding:11px;background:white;color:#b45309;border:1.5px solid #fbbf24;border-radius:8px;cursor:pointer;font-family:inherit;font-size:0.9em;">바로 열기</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /env-body -->
+
+    <!-- 봉투 하단 사선 스트라이프 -->
+    <div class="env-bottom-stripe"></div>
+
+  </div><!-- /envelope-card -->
+</div>
+
+<div class="scale-host" id="scaleHost">
+<div class="container">
+  <div class="mailbox-top"><div class="mailbox-slot"></div></div>
+  <div class="mailbox-outer">
+  <div class="mailbox-body">
+
+    <!-- 헤더 -->
+    <header style="position:relative;">
+      <button onclick="goHome()" title="처음 화면으로" style="position:absolute;top:10px;right:10px;background:white;border:none;border-radius:24px;height:48px;padding:0 16px 0 12px;font-size:1.05em;color:#db2777;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.28);display:flex;align-items:center;gap:5px;z-index:5;font-family:'Jua',sans-serif;"><span style="font-size:1.4em;">🏠</span>홈</button>
+      <h1>💌 마음 전달 우체국</h1>
+      <p>따뜻한 마음을 전하는 특별한 우체부가 되어보세요!</p>
+      <div class="user-info">
+        <div class="stat-card">
+          <h3>배달한 편지</h3>
+          <div class="val" id="deliveredCount">0</div>
+        </div>
+        <div class="stat-card">
+          <h3>감동 지수</h3>
+          <div class="val" id="avgScore">0%</div>
+        </div>
+        <div class="stat-card">
+          <h3>수집한 우표</h3>
+          <div class="val" id="stampCount">0/5</div>
+        </div>
+        <div class="stat-card">
+          <h3>우체부 등급</h3>
+          <div class="val" id="userRank">😴 쿨쿨 잠자는 알</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 메인 -->
+    <div class="main-content">
+      <!-- ── 인트로 화면 (탭 외부, 로그인 직후 표시) ── -->
+      <div id="introScreen" style="display:none;flex:1;overflow:hidden;min-height:0;flex-direction:column;">
+
+        <!-- 진행 점 -->
+        <div style="display:flex;justify-content:center;gap:8px;margin-bottom:12px;flex-shrink:0;">
+          <div class="prog-dot active" id="introDot0" onclick="goIntroSlide(0)"></div>
+          <div class="prog-dot"        id="introDot1" onclick="goIntroSlide(1)"></div>
+          <div class="prog-dot"        id="introDot2" onclick="goIntroSlide(2)"></div>
+        </div>
+
+        <!-- 슬라이드 뷰포트 -->
+        <div style="overflow:hidden;border-radius:18px;margin-bottom:12px;flex:1;min-height:0;display:flex;">
+          <div id="introTrack" style="display:flex;transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);align-items:stretch;width:100%;flex:none;min-width:0;">
+
+            <!-- 슬라이드 1: 활동 목적 -->
+            <div class="intro-slide" style="width:100%;min-width:100%;max-width:100%;flex:0 0 100%;padding:16px 22px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;">
+              <div style="text-align:center;margin-bottom:20px;">
+                <span style="font-size:3em;">💌</span>
+                <div id="introGreeting" style="font-family:'Jua',sans-serif;font-size:1.7em;font-weight:bold;color:#1e293b;margin-top:8px;">안녕하세요!</div>
+              </div>
+              <div class="intro-purpose">
+                <div class="label">✨ 이 활동의 목적</div>
+                편지는 내 마음을 글로 표현해서 상대방에게 전하는 거예요.<br>
+                잘 쓴 편지 한 통이 받는 사람의 하루를 환하게 바꿀 수 있어요.<br>
+                오늘은 <strong>내 마음을 솔직하고 구체적으로 담는 연습</strong>을 해봐요.
+              </div>
+            </div>
+
+            <!-- 슬라이드 2: 활동 단계 -->
+            <div class="intro-slide" style="width:100%;min-width:100%;max-width:100%;flex:0 0 100%;padding:14px 22px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;">
+              <div style="font-family:'Jua',sans-serif;font-size:1.3em;font-weight:bold;color:#1e293b;text-align:center;margin-bottom:18px;">
+                📋 오늘 활동 순서
+              </div>
+              <div class="intro-steps">
+                <div class="step-card">
+                  <div class="step-num">1</div>
+                  <div class="step-icon">💌</div>
+                  <div class="step-body">
+                    <strong>편지 유형 고르기</strong>
+                    <span>감사, 축하, 위로, 초대, 사과 중 지금 마음에 맞는 걸 선택해요</span>
+                  </div>
+                </div>
+                <div class="step-card">
+                  <div class="step-num">2</div>
+                  <div class="step-icon">✍️</div>
+                  <div class="step-body">
+                    <strong>편지 쓰기</strong>
+                    <span>받는 사람을 떠올리며 구체적으로, 진심을 담아 써요</span>
+                  </div>
+                </div>
+                <div class="step-card">
+                  <div class="step-num">3</div>
+                  <div class="step-icon">💖</div>
+                  <div class="step-body">
+                    <strong>마음 돌아보기</strong>
+                    <span>편지를 보내기 전, 내 진심이 잘 담겼는지 스스로 확인해요</span>
+                  </div>
+                </div>
+                <div class="step-card">
+                  <div class="step-num">4</div>
+                  <div class="step-icon">📮</div>
+                  <div class="step-body">
+                    <strong>전달하기</strong>
+                    <span>완성된 편지를 선생님께 보내고, 링크로 받는 사람에게 직접 전해줄 수도 있어요</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 슬라이드 3: 오늘의 미션 + 시작 -->
+            <div class="intro-slide" style="width:100%;min-width:100%;max-width:100%;flex:0 0 100%;padding:16px 22px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+              <div style="font-family:'Jua',sans-serif;font-size:1.4em;font-weight:bold;color:#1e293b;margin-bottom:20px;">
+                🎯 오늘의 미션
+              </div>
+              <div class="intro-mission" style="margin-bottom:28px;width:100%;">
+                <div class="mission-text">
+                  받는 사람이 읽고 나서<br>
+                  <span style="color:#f5576c;">"내 마음이 진짜 전달됐다"</span>고<br>
+                  느낄 수 있는 편지를 써보세요!
+                </div>
+              </div>
+              <div style="display:flex;gap:12px;width:100%;">
+                <button class="btn btn-primary" style="flex:1;padding:18px;font-size:1.05em;"
+                        onclick="startActivity()">
+                  📖 개념 먼저 배우기
+                </button>
+                <button class="btn btn-secondary" style="flex:1;padding:18px;font-size:1.05em;"
+                        onclick="skipConcept()">
+                  ✍️ 편지 쓰기 바로 가기
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 이전/다음 버튼 -->
+        <div style="display:flex;gap:10px;flex-shrink:0;">
+          <button class="sl-btn-prev" id="introPrev" onclick="prevIntroSlide()" disabled>← 이전</button>
+          <button class="sl-btn-next" id="introNext" onclick="nextIntroSlide()">다음 →</button>
+        </div>
+      </div>
+
+      <!-- ── 탭 메뉴 (인트로 통과 후 표시) ── -->
+      <div id="tabArea" style="display:none;flex:1;display:none;flex-direction:column;overflow:hidden;min-height:0;">
+      <div class="tabs">
+        <button class="tab" onclick="openConceptModal()">💡 편지란?</button>
+        <button class="tab active" onclick="onWriteTabClick(this)">✍️ 편지 쓰기</button>
+        <button class="tab" onclick="switchTab('mailbox', this)">📬 우편함</button>
+        <button class="tab" onclick="switchTab('guide', this)">📖 가이드</button>
+      </div>
+
+      <!-- ⓪ 편지란? 탭 → 모달 팝업 (탭 버튼만 유지, 실제 콘텐츠는 모달) -->
+      <div id="tab-concept" style="display:none;">
+        <!-- 빈 탭 (모달로 처리) -->
+      </div>
+
+            <!-- ① 편지 쓰기 탭 -->
+      <div id="tab-write">
+
+        <!-- 이름 입력 화면 -->
+        <div id="nameScreen">
+          <h2>👋 안녕하세요!</h2>
+          <p>편지를 쓰기 전에 이름을 입력해 주세요.</p>
+          <div class="name-input-wrap">
+            <input id="studentNameInput" type="text" placeholder="예: 김민준" maxlength="10">
+            <button class="btn btn-primary" onclick="confirmName()">시작하기</button>
+          </div>
+        </div>
+
+        <!-- ── 개념 학습 슬라이드 ── -->
+        <!-- 편지 유형 선택 -->
+        <div id="typeSelection" style="display:none;">
+          <h2 style="margin-bottom:6px;font-size:1.4em;">어떤 마음을 전하고 싶나요?</h2>
+          <p style="font-size:0.98em;color:#64748b;margin-bottom:16px;">
+            지금 마음에 가장 가까운 편지를 골라보세요.
+          </p>
+          <div class="letter-types">
+            <div class="letter-type-card" onclick="selectType('thanks', this)">
+              <div class="icon">🙏</div>
+              <h3>감사 편지</h3>
+            </div>
+            <div class="letter-type-card" onclick="selectType('congrats', this)">
+              <div class="icon">🎉</div>
+              <h3>축하 편지</h3>
+            </div>
+            <div class="letter-type-card" onclick="selectType('comfort', this)">
+              <div class="icon">💝</div>
+              <h3>위로 편지</h3>
+            </div>
+            <div class="letter-type-card" onclick="selectType('invitation', this)">
+              <div class="icon">🎈</div>
+              <h3>초대 편지</h3>
+            </div>
+            <div class="letter-type-card" onclick="selectType('apology', this)">
+              <div class="icon">🙇</div>
+              <h3>사과 편지</h3>
+            </div>
+          </div>
+
+          <!-- 나만의 편지 -->
+          <div style="border:2px dashed #c4b5fd;border-radius:16px;padding:16px 18px;background:#faf8ff;margin-top:4px;">
+            <div style="font-size:1.05em;font-weight:bold;color:#5b21b6;margin-bottom:10px;">
+              ✍️ 나만의 편지 — 전하고 싶은 마음이 따로 있나요?
+            </div>
+            <div style="font-size:0.95em;color:#7c3aed;margin-bottom:12px;">
+              위의 5가지에 없어도 괜찮아요! 어떤 마음이든 편지로 쓸 수 있어요.
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input id="customTypeInput" class="tpl-input"
+                style="flex:1;margin-bottom:0;font-size:0.95em;"
+                type="text" maxlength="20"
+                placeholder="예: 응원, 격려, 존경, 그리움...">
+              <button class="btn btn-primary"
+                style="padding:12px 18px;white-space:nowrap;flex-shrink:0;"
+                onclick="selectCustomType()">이 마음으로 쓰기 →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 편지 작성 -->
+        <div id="workspace" class="letter-workspace">
+          <!-- 고쳐쓰기 배너 -->
+          <div id="reviseBanner" style="display:none;align-items:center;gap:10px;
+            background:#f0edff;border-radius:12px;padding:12px 16px;margin-bottom:12px;
+            border:1.5px solid #c4b5fd;">
+            <span style="font-size:1.3em;">✏️</span>
+            <span style="font-size:0.9em;color:#4c1d95;font-weight:bold;">고쳐쓰기 중이에요! 피드백을 참고해서 더 좋은 편지를 써봐요.</span>
+          </div>
+
+          <!-- 마법사 헤더 -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-shrink:0;">
+            <button class="btn btn-secondary" style="padding:10px 16px;font-size:1em;" onclick="backToTypes()">← 다시 선택</button>
+            <div id="workspaceTitle" style="font-size:1.25em;font-weight:bold;color:#1e293b;font-family:'Jua',sans-serif;flex:1;"></div>
+          </div>
+
+          <!-- 진행 표시: 7단계 스테퍼 (JS가 생성) -->
+          <div class="wiz-stepper" id="wizStepper"></div>
+
+          <!-- 슬라이드 영역 -->
+          <div style="overflow:hidden;border-radius:16px;margin-bottom:12px;flex:1;min-height:0;display:flex;">
+            <div id="wizTrack" style="display:flex;transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);width:100%;flex:none;min-width:0;align-items:stretch;">
+
+              <!-- Step 1: 받는 사람 -->
+              <div class="wiz-step split">
+                <div class="wiz-left">
+                  <div class="wiz-step-icon">👤</div>
+                  <div class="wiz-step-title">받는 사람</div>
+                  <div class="wiz-hint" id="wHint0"></div>
+                </div>
+                <div class="wiz-right">
+                  <input id="recipient" class="tpl-input" type="text"
+                         placeholder="예: 어머니, ○○○ 선생님"
+                         oninput="updateWizCounter()" style="font-size:1.1em;padding:14px 16px;">
+                </div>
+              </div>
+
+              <!-- Step 2: 첫인사 -->
+              <div class="wiz-step split">
+                <div class="wiz-left">
+                  <div class="wiz-step-icon">👋</div>
+                  <div class="wiz-step-title">첫인사</div>
+                  <div class="wiz-hint" id="wHint1"></div>
+                </div>
+                <div class="wiz-right">
+                  <textarea id="tplGreeting" class="tpl-textarea" rows="4"
+                            placeholder="예: 안녕하세요, 잘 지내고 있어?"
+                            oninput="updateWizCounter()" style="font-size:1.05em;"></textarea>
+                </div>
+              </div>
+
+              <!-- Step 3: 전하고자 하는 내용 -->
+              <div class="wiz-step split">
+                <div class="wiz-left">
+                  <div class="wiz-step-icon">❤️</div>
+                  <div class="wiz-step-title">전하고 싶은 말</div>
+                  <div class="wiz-hint" id="wHint2"></div>
+                </div>
+                <div class="wiz-right">
+                  <textarea id="tplBody" class="tpl-textarea" rows="7"
+                            oninput="updateWizCounter()" style="font-size:1.05em;"></textarea>
+                  <div class="char-counter" id="charCounter" style="margin-top:6px;">글자 수: 0자</div>
+                </div>
+              </div>
+
+              <!-- Step 4: 끝인사 -->
+              <div class="wiz-step split">
+                <div class="wiz-left">
+                  <div class="wiz-step-icon">🙏</div>
+                  <div class="wiz-step-title">끝인사</div>
+                  <div class="wiz-hint" id="wHint3"></div>
+                </div>
+                <div class="wiz-right">
+                  <textarea id="tplClosing" class="tpl-textarea" rows="4"
+                            placeholder="예: 항상 건강하세요, 그럼 안녕!"
+                            oninput="updateWizCounter()" style="font-size:1.05em;"></textarea>
+                </div>
+              </div>
+
+              <!-- Step 5: 추신 (선택) -->
+              <div class="wiz-step split">
+                <div class="wiz-left">
+                  <div class="wiz-step-icon">✏️</div>
+                  <div class="wiz-step-title">추신 <span style="font-size:0.6em;color:#94a3b8;">(선택)</span></div>
+                  <div class="wiz-hint" style="background:#fef9c3;border-left:3px solid #facc15;padding:10px 14px;border-radius:0 8px 8px 0;font-size:0.88em;color:#854d0e;">
+                    편지를 다 쓴 뒤 덧붙이고 싶은 말이 있으면 써보세요. 없으면 그냥 넘어가도 돼요!
+                  </div>
+                </div>
+                <div class="wiz-right">
+                  <textarea id="tplPS" class="tpl-textarea" rows="3"
+                            placeholder='예: 다음에 꼭 같이 놀자!'
+                            style="font-size:1.05em;"></textarea>
+                </div>
+              </div>
+
+              <!-- Step 6: 날짜 -->
+              <div class="wiz-step">
+                <div class="wiz-step-icon">📅</div>
+                <div class="wiz-step-title">날짜</div>
+                <div class="wiz-hint" style="background:#f0f9ff;border-left:3px solid #38bdf8;padding:10px 14px;border-radius:0 8px 8px 0;font-size:0.88em;color:#0369a1;margin-bottom:12px;">
+                  오늘 날짜가 자동으로 입력됐어요. 수정해도 돼요!
+                </div>
+                <input id="letterDate" class="tpl-input" type="text"
+                       placeholder="예: 2025년 4월 23일"
+                       style="font-size:1.1em;padding:14px 16px;text-align:center;">
+              </div>
+
+              <!-- Step 7: 보내는 사람 -->
+              <div class="wiz-step">
+                <div class="wiz-step-icon">✍️</div>
+                <div class="wiz-step-title">보내는 사람</div>
+                <div class="wiz-hint" style="background:#f0f9ff;border-left:3px solid #38bdf8;padding:10px 14px;border-radius:0 8px 8px 0;font-size:0.88em;color:#0369a1;margin-bottom:12px;">
+                  편지 맨 아래에 이름이 들어가요.
+                </div>
+                <input id="sender" class="tpl-input" type="text"
+                       placeholder="내 이름을 입력하세요"
+                       style="font-size:1.1em;padding:14px 16px;text-align:center;">
+              </div>
+
+              <!-- Step 8: 편지지 고르기 + 미리보기 (스크롤 없게 컴팩트 구성) -->
+              <div class="wiz-step">
+                <div class="wiz-step-title" style="font-size:1.4em;margin-bottom:10px;">🎨 편지지 고르기</div>
+                <div class="wiz-hint" style="background:#fdf2f8;border-left:3px solid #f472b6;padding:9px 14px;border-radius:0 8px 8px 0;font-size:0.88em;color:#9d174d;margin-bottom:10px;">
+                  마음에 드는 편지지를 고르고, 보내기 전에 <strong>미리보기</strong>로 꼭 확인해 보세요!
+                </div>
+                <div class="paper-picker" id="paperPicker" style="margin-top:0;">
+                  <div class="paper-chip selected" data-paper="basic" onclick="selectPaper('basic', this)">
+                    <div class="paper-swatch paper-basic"></div>
+                    <div class="paper-name">기본</div>
+                  </div>
+                  <div class="paper-chip" data-paper="sky" onclick="selectPaper('sky', this)">
+                    <div class="paper-swatch paper-sky"></div>
+                    <div class="paper-name">하늘 ☁️</div>
+                  </div>
+                  <div class="paper-chip" data-paper="blossom" onclick="selectPaper('blossom', this)">
+                    <div class="paper-swatch paper-blossom"></div>
+                    <div class="paper-name">벚꽃 🌸</div>
+                  </div>
+                  <div class="paper-chip" data-paper="forest" onclick="selectPaper('forest', this)">
+                    <div class="paper-swatch paper-forest"></div>
+                    <div class="paper-name">숲 🌿</div>
+                  </div>
+                  <div class="paper-chip" data-paper="night" onclick="selectPaper('night', this)">
+                    <div class="paper-swatch paper-night"></div>
+                    <div class="paper-name">별밤 🌙</div>
+                  </div>
+                </div>
+
+                <!-- 미리보기 버튼 (팝업으로 표시) -->
+                <button id="wizPreviewBtn" onclick="openWizPreview()" style="display:flex;margin-top:10px;width:100%;background:#fff8f0;border:2px dashed #f5576c;border-radius:14px;padding:12px;cursor:pointer;font-family:inherit;font-size:1.05em;color:#c2410c;align-items:center;justify-content:center;gap:8px;">
+                  📋 편지 미리보기
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- 네비게이션 버튼 -->
+          <div style="display:flex;gap:10px;align-items:center;flex-shrink:0;padding-top:4px;">
+            <button class="sl-btn-prev" id="wizPrev" onclick="prevWizStep()" disabled>← 이전</button>
+            <button class="sl-btn-next" id="wizNext" onclick="nextWizStep()">다음 →</button>
+          </div>
+        </div>
+
+        <!-- 진심 온도계 화면 -->
+        <div id="sincerityScreen">
+          <!-- 내가 쓴 편지 다시 보기 버튼 -->
+          <button onclick="showWrittenLetter()" style="width:100%;background:#fff8f0;border:2px dashed #f5576c;border-radius:14px;padding:14px;margin-bottom:14px;cursor:pointer;font-family:inherit;font-size:1.05em;color:#c2410c;display:flex;align-items:center;justify-content:center;gap:8px;">
+            📖 내가 쓴 편지 다시 보기
+          </button>
+
+          <!-- 진심 온도 슬라이더 -->
+          <div class="sincerity-card">
+            <h2>💌 편지를 보내기 전에 잠깐!</h2>
+            <p class="sub">이 편지에 내 진심이 얼마나 담겼는지 스스로 돌아봐요</p>
+            <div class="sincerity-slider-wrap">
+              <div class="sincerity-emoji-row">
+                <span>😶</span><span>🙂</span><span>😊</span><span>🥰</span><span>💖</span>
+              </div>
+              <input type="range" class="sincerity-slider" id="sinceritySlider"
+                     min="1" max="5" value="3" oninput="updateSincerityLabel(this.value)">
+              <div class="sincerity-label" id="sincerityLabel">꽤 담겼어요 😊</div>
+            </div>
+          </div>
+
+          <!-- 행동 체크리스트 -->
+          <div class="sincerity-checklist">
+            <div class="cl-title">
+              편지를 쓸 때 <span>내가 한 것</span>을 골라봐요
+              <span style="color:#94a3b8;font-weight:normal;"> (여러 개 가능)</span>
+            </div>
+
+            <div class="check-item" onclick="toggleCheck(this)" data-val="받는 사람 얼굴을 떠올렸어요">
+              <div class="check-box"></div>
+              <div class="check-text">👤 받는 사람 얼굴을 떠올렸어요</div>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)" data-val="편지를 처음부터 다시 읽어봤어요">
+              <div class="check-box"></div>
+              <div class="check-text">🔍 편지를 처음부터 다시 읽어봤어요</div>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)" data-val="구체적인 일을 기억해서 썼어요">
+              <div class="check-box"></div>
+              <div class="check-text">📌 구체적인 일을 기억해서 썼어요</div>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)" data-val="솔직하게 쓰려고 노력했어요">
+              <div class="check-box"></div>
+              <div class="check-text">💬 솔직하게 쓰려고 노력했어요</div>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)" data-val="받는 사람이 어떻게 느낄지 생각했어요">
+              <div class="check-box"></div>
+              <div class="check-text">💝 받는 사람이 어떻게 느낄지 생각했어요</div>
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn btn-secondary" onclick="goBackToWrite()" style="flex:1;">
+              ✏️ 다시 쓸게요
+            </button>
+            <button class="btn btn-primary" onclick="confirmSend()" style="flex:1;">
+              💌 이대로 보낼게요
+            </button>
+          </div>
+        </div>
+
+        <!-- 결과 화면 -->
+        <div id="resultScreen">
+          <!-- 피드백 카드 (감동 지수 대신) -->
+          <div class="result-card">
+            <h2>💌 편지가 전달되었어요!</h2>
+            <p id="emotionComment" style="margin-bottom:0;"></p>
+          </div>
+
+          <!-- 구체 피드백 3가지 -->
+          <div id="feedbackList" style="margin-bottom:16px;"></div>
+
+          <!-- 고쳐쓰기 안내 -->
+          <div id="revisePrompt" style="background:linear-gradient(135deg,#f0edff,#fdf2f8);border-radius:14px;padding:16px 18px;margin-bottom:16px;border:1.5px solid #c4b5fd;display:none;">
+            <div style="font-size:0.92em;color:#4c1d95;font-weight:bold;margin-bottom:6px;">✏️ 고쳐쓰기를 해볼까요?</div>
+            <div style="font-size:0.85em;color:#6d28d9;line-height:1.7;" id="reviseHint"></div>
+          </div>
+
+          <div style="background:#f8f9fa;border-radius:12px;padding:16px;margin-bottom:16px;">
+            <h3 id="rewardTitle" style="margin-bottom:10px;font-size:1em;">📮 우표 수집 현황</h3>
+            <div class="stamp-row" id="stampDisplay"></div>
+          </div>
+
+          <p id="saveStatus" style="text-align:center;font-size:0.85em;color:#7c3aed;margin-bottom:12px;"></p>
+
+          <!-- 공유 링크 (저장 성공 후 표시) -->
+          <div class="share-box" id="shareBox" style="display:none;">
+            <div class="share-title">🔗 링크로 편지 공유하기</div>
+            <p style="font-size:0.82em;color:#15803d;margin-bottom:10px;">
+              이 링크를 받는 사람에게 보내면 편지를 볼 수 있어요!
+            </p>
+            <div class="share-url-row">
+              <div class="share-url-text" id="shareUrl">링크 생성 중...</div>
+              <button class="copy-btn" onclick="copyShareUrl()">📋 복사</button>
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn btn-secondary" onclick="backToTypes()">다른 편지 쓰기</button>
+            <button class="btn" id="reviseBtn"
+              style="flex:1;background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;display:none;"
+              onclick="startRevise()">✏️ 고쳐쓰기</button>
+            <button class="btn btn-secondary" onclick="printLetter()" id="printBtn" style="display:none;">🖨️ 인쇄</button>
+            <button class="btn btn-primary" onclick="switchTab('mailbox', null)">📬 우편함 보기</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ② 우편함 탭 -->
+      <div id="tab-mailbox" style="display:none;">
+        <h2 style="margin-bottom:16px;font-size:1.1em;">📬 보낸 편지함</h2>
+        <div id="mailList">
+          <p style="text-align:center;color:#aaa;padding:40px;">아직 보낸 편지가 없어요.<br>첫 번째 편지를 작성해보세요! ✍️</p>
+        </div>
+      </div>
+
+      <!-- ③ 피어 피드백 탭 -->
+      <!-- ③ 가이드 탭 -->
+      <div id="tab-guide" style="display:none;">
+        <h2 style="margin-bottom:16px;font-size:1.2em;">📖 편지 쓰기 가이드</h2>
+
+        <!-- 감동 지수 -->
+        <div style="background:#fff8ee;border-radius:14px;border-left:5px solid #f97316;padding:20px 22px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+          <h3 style="color:#ea580c;margin-bottom:12px;">📊 감동 지수란?</h3>
+          <p style="margin-bottom:12px;font-size:0.9em;color:#1e293b;line-height:1.7;">편지가 얼마나 마음을 잘 전달했는지 보여주는 점수예요. (최대 100점)</p>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:0.88em;">
+            <div style="background:white;border-radius:10px;padding:10px 14px;">
+              <strong>🎁 기본 점수</strong> — 편지를 완성하면 누구나 50점에서 시작해요
+            </div>
+            <div style="background:white;border-radius:10px;padding:10px 14px;">
+              <strong>✍️ 충분히 쓰기</strong> — 200자↑ +20점 · 100자↑ +15점 · 50자↑ +10점
+            </div>
+            <div style="background:white;border-radius:10px;padding:10px 14px;">
+              <strong>💝 감정 단어</strong> — 감사, 고마, 사랑, 축하, 기쁘, 행복, 미안, 죄송, 위로, 힘내, 응원, 자랑스럽, 소중, 따뜻, 진심 (단어당 +5점, 최대 +30점)
+            </div>
+          </div>
+          <div style="background:#fef3c7;border-radius:10px;padding:12px 14px;margin-top:10px;font-size:0.88em;color:#92400e;line-height:1.7;">
+            🎯 감동 지수가 <strong>70점 이상</strong>인 편지를 보내면 <strong>우표 1개</strong>를 받아요!<br>
+            📮 우표는 <span style="font-size:1.15em;">🌸 🌟 🎀 🦋 🌈</span> 순서로 <strong>5개</strong>까지 모을 수 있어요.<br>
+            💡 마음을 자세히, 솔직하게 쓰면 점수는 저절로 따라와요!
+          </div>
+        </div>
+
+        <!-- 배달부 등급 -->
+        <div style="background:#fdf2f8;border-radius:14px;padding:20px 22px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+          <h3 style="color:#be185d;margin-bottom:14px;">🏆 배달부 등급</h3>
+          <div style="display:flex;align-items:center;gap:12px;background:white;border-radius:10px;padding:11px 14px;margin-bottom:7px;">
+            <span style="font-size:1.6em;">😴</span>
+            <div><strong style="font-size:0.9em;">쿨쿨 잠자는 알</strong> <span style="font-size:0.78em;color:#888;">— 0통</span><br><span style="font-size:0.78em;color:#666;">아직 깨어나지 않았어요. 편지를 써서 깨워주세요!</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;background:white;border-radius:10px;padding:11px 14px;margin-bottom:7px;">
+            <span style="font-size:1.6em;">🐥</span>
+            <div><strong style="font-size:0.9em;">뒤뚱뒤뚱 병아리</strong> <span style="font-size:0.78em;color:#888;">— 1통~</span><br><span style="font-size:0.78em;color:#666;">삐악! 열심히 아장아장 걷는 중!</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;background:white;border-radius:10px;padding:11px 14px;margin-bottom:7px;">
+            <span style="font-size:1.6em;">🐦</span>
+            <div><strong style="font-size:0.9em;">파닥파닥 참새</strong> <span style="font-size:0.78em;color:#888;">— 5통~</span><br><span style="font-size:0.78em;color:#666;">이제 날 수 있어요! 짹짹 소식을 전해줘요.</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;background:white;border-radius:10px;padding:11px 14px;margin-bottom:7px;">
+            <span style="font-size:1.6em;">🦅</span>
+            <div><strong style="font-size:0.9em;">구름 위 독수리</strong> <span style="font-size:0.78em;color:#888;">— 10통~</span><br><span style="font-size:0.78em;color:#666;">슈웅~! 어디든 금방 도착해요.</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;background:white;border-radius:10px;padding:11px 14px;">
+            <span style="font-size:1.6em;">🐉</span>
+            <div><strong style="font-size:0.9em;">전설의 용</strong> <span style="font-size:0.78em;color:#888;">— 15통~</span><br><span style="font-size:0.78em;color:#666;">편지 배달의 끝판왕! 우주까지 배달해요! 🔥</span></div>
+          </div>
+        </div>
+      </div><!-- /tab-guide -->
+      </div><!-- /tabArea -->
+    </div><!-- /main-content -->
+
+  </div><!-- /mailbox-body -->
+  </div><!-- /mailbox-outer -->
+  <div class="mailbox-legs"></div>
+</div><!-- /container -->
+</div><!-- /scale-host -->
+
+<!-- 저장 중 오버레이 -->
+<div id="savingOverlay">
+  <div class="saving-box">
+    <span class="spinner">📮</span>
+    <div>편지를 배달하는 중이에요...</div>
+  </div>
+</div>
+
+<script>
+  // ══════════════════════════════════════════════════════════
+  //  서버 연결 (마스터 프롬프트 8장: 접속 방식 자동 판별)
+  //  [A] 이 화면을 Apps Script가 직접 보여주는 중 → google.script.run
+  //  [B] 외부(GitHub Pages 등)에서 열림 + 창고 주소(#c=) 있음 → 접수 창구로 요청
+  //  [C] 둘 다 아님 → 데모 모드 (이 기기 안에만 저장)
+  // ══════════════════════════════════════════════════════════
+  const APP_ID = 'heart-post';
+  let _mode    = 'gas';    // 'gas' | 'linked' | 'demo'
+  let _execUrl = '';       // 연결된 창고(시트 웹앱) 주소
+
+  function detectMode() {
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      _mode = 'gas';
+      return;
+    }
+    const m = location.hash.match(/#c=([^&]+)/);
+    const fromLink = m ? decodeURIComponent(m[1]) : '';
+    const saved    = localStorage.getItem('execUrl:' + APP_ID) || '';
+    _execUrl = fromLink || saved;
+    _mode    = _execUrl ? 'linked' : 'demo';
+  }
+
+  // 연결된 시트로 요청 보내기
+  //  화면과 시트는 서로 다른 주소라, 브라우저 보안에 막히지 않는 방식으로 부른다.
+  //  보낼 내용이 아주 길 때만 예전 방식으로 보낸다.
+  let _reqSeq = 0;
+  function requestSheet(baseUrl, fnName, args) {
+    const body  = JSON.stringify(args || []);
+    const query = 'fn=' + encodeURIComponent(fnName) + '&args=' + encodeURIComponent(body);
+
+    if (query.length > 6000 && typeof fetch === 'function') {
+      return fetch(baseUrl, { method: 'POST', body: JSON.stringify({ fn: fnName, args: args || [] }) })
+        .then(r => r.json());
+    }
+
+    return new Promise(function (resolve, reject) {
+      const cb = '_hp_' + Date.now() + '_' + (_reqSeq++);
+      let done = false;
+      const timer = setTimeout(function () { finish(null, true); }, 20000);
+
+      function finish(res, failed) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        try { delete window[cb]; } catch (e) { window[cb] = undefined; }
+        const el = document.getElementById(cb);
+        if (el && el.parentNode) el.parentNode.removeChild(el);
+        if (failed) reject(new Error('연결에 실패했어요.'));
+        else resolve(res);
+      }
+
+      window[cb] = function (res) { finish(res, false); };
+
+      const sc = document.createElement('script');
+      sc.id  = cb;
+      sc.src = baseUrl + (baseUrl.indexOf('?') >= 0 ? '&' : '?') + query +
+               '&callback=' + encodeURIComponent(cb) + '&_=' + Date.now();
+      sc.async = true;
+      sc.onerror = function () { finish(null, true); };
+      document.body.appendChild(sc);
+    });
+  }
+
+  // 화면의 모든 서버 요청은 이 함수 하나만 사용한다.
+  function callServer(fnName, args, onSuccess, onFailure) {
+    args      = args      || [];
+    onSuccess = onSuccess || function () {};
+    onFailure = onFailure || function () {};
+    if (_mode === 'gas') {
+      const runner = google.script.run
+        .withSuccessHandler(onSuccess)
+        .withFailureHandler(onFailure);
+      runner[fnName].apply(runner, args);
+      return;
+    }
+    if (_mode === 'linked') {
+      requestSheet(_execUrl, fnName, args).then(onSuccess).catch(onFailure);
+      return;
+    }
+    // 데모 모드: 기기 안 가짜 서버가 즉시 응답
+    const res = demoServer(fnName, args);
+    setTimeout(() => onSuccess(res), 60);
+  }
+
+  // 공유 링크 등에 쓰는 기본 주소 (모드별로 다르게 구함)
+  function getBaseUrl(cb) {
+    if (_mode === 'gas')    { callServer('getAppUrl', [], url => cb(url || window.location.href.split('?')[0])); return; }
+    if (_mode === 'linked') { cb(_execUrl); return; }
+    cb('');   // 데모: 공유 링크 없음
+  }
+
+  // 편지 공유 링크 만들기 — 접속 방식에 따라 올바른 주소 형태로
+  // [A] 구방식: 창고주소?page=view&id=번호  (창고가 뷰어 화면까지 담당)
+  // [B] 신방식: 앱주소/viewer.html#c=창고주소&id=번호 (본사 뷰어 + 우리 반 창고)
+  // [C] 데모: 링크 없음 (기기 밖으로 나갈 수 없으므로)
+  function makeLetterLink(letterId, cb) {
+    if (_mode === 'gas') {
+      callServer('getAppUrl', [], appUrl => {
+        const base = (appUrl || window.location.href).split('?')[0].split('#')[0];
+        cb(base + '?page=view&id=' + letterId);
+      });
+      return;
+    }
+    if (_mode === 'linked') {
+      const dir = window.location.href.split('#')[0].replace(/[^\/]*$/, '');
+      cb(dir + 'viewer.html#c=' + encodeURIComponent(_execUrl) + '&id=' + encodeURIComponent(letterId));
+      return;
+    }
+    cb('');
+  }
+
+  // ── 데모 모드 가짜 서버 (localStorage) ──────────────────
+  const _DEMO_LETTERS_KEY = 'demoLetters:' + APP_ID;
+  function _demoLoad() {
+    try { return JSON.parse(localStorage.getItem(_DEMO_LETTERS_KEY) || '[]'); }
+    catch (e) { return []; }
+  }
+  function _demoTodayKo() {
+    const d = new Date();
+    return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
+  }
+  const _DEMO_TYPE_KO = {
+    thanks: '감사 편지', congrats: '축하 편지', comfort: '위로 편지',
+    invitation: '초대 편지', apology: '사과 편지'
+  };
+
+  function demoServer(fnName, args) {
+    switch (fnName) {
+      case 'getRosterList': {
+        const students = [];
+        for (let i = 1; i <= 30; i++) students.push({ no: String(i), name: '학생 ' + i });
+        return { success: true, students: students };
+      }
+      case 'getMyLetters': {
+        const name = String(args[0] || '');
+        const mine = _demoLoad().filter(l => l.owner === name);
+        return { success: true, letters: mine };
+      }
+      case 'saveLetterData': {
+        const d   = args[0] || {};
+        const all = _demoLoad();
+        const typed  = String(d.sender || '').trim();
+        const roster = String(d.studentName || '').trim();
+        all.push({
+          owner:    roster,
+          date:     _demoTodayKo(),
+          type:     _DEMO_TYPE_KO[d.letterType] || d.letterType,
+          recipient: d.recipient || '',
+          content:  d.content || '',
+          letterId: 'demo-' + Date.now(),
+          paper:    d.paper || 'basic',
+          sender:   (typed && typed !== roster) ? typed + '(' + roster + ')' : (typed || roster),
+          score:    Number(d.emotionScore) || 0
+        });
+        localStorage.setItem(_DEMO_LETTERS_KEY, JSON.stringify(all));
+        return { success: true, letterId: all[all.length - 1].letterId, demo: true };
+      }
+      case 'getBuildInfo':
+        return { sig: 'GEGHS-DEEPE-2026', owner: 'GEG 화성(깊이 e끌림)', year: 2026 };
+      default:
+        return { success: false, message: '선생님이 구글 시트를 연결하면 사용할 수 있어요.' };
+    }
+  }
+
+  // 접속하자마자 모드 판별
+  detectMode();
+
+  // ── 데모 모드 이어하기 (마스터 3-2: 단계 + 입력값 책갈피) ──
+  // 학생별로 쓰다 만 편지를 기기에 저장했다가, 같은 학생으로
+  // 재진입하면 그 단계부터 이어서 쓴다. 편지를 보내면(완료) 삭제.
+  let _studentNo = '';
+  const WIZ_FIELD_IDS = ['recipient','tplGreeting','tplBody','tplClosing','tplPS','letterDate','sender'];
+
+  function _progressKey() {
+    return 'progress:' + APP_ID + ':' + (_studentNo || studentName || '');
+  }
+
+  function demoSaveProgress() {
+    if (_mode !== 'demo' || !studentName || !currentType) return;
+    const ws = document.getElementById('workspace');
+    if (!ws || !ws.classList.contains('active')) return;   // 편지 쓰는 중일 때만
+    const fields = {};
+    WIZ_FIELD_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) fields[id] = el.value;
+    });
+    const snap = { type: currentType, step: _wizStep, fields: fields, paper: _selectedPaper };
+    try { localStorage.setItem(_progressKey(), JSON.stringify(snap)); } catch (e) {}
+  }
+
+  function demoClearProgress() {
+    if (_mode !== 'demo') return;
+    try { localStorage.removeItem(_progressKey()); } catch (e) {}
+  }
+
+  // 로그인 직후 호출: 책갈피가 있으면 쓰던 단계로 직행 (true 반환)
+  function demoResumeIfAny() {
+    if (_mode !== 'demo') return false;
+    let snap = null;
+    try { snap = JSON.parse(localStorage.getItem(_progressKey()) || 'null'); } catch (e) {}
+    if (!snap || !snap.type) return false;
+    const card = document.querySelector('.letter-type-card[onclick*="' + snap.type + '"]');
+    if (!card) return false;
+
+    // 활동 화면으로 전환 (startActivity와 같은 절차, 개념 팝업은 생략)
+    document.getElementById('introScreen').style.display = 'none';
+    const ta = document.getElementById('tabArea');
+    ta.style.display = 'flex';
+    ta.style.flex    = '1';
+    switchTab('write', document.querySelectorAll('.tab')[1]);
+
+    // 유형 선택(입력 초기화 포함) → 저장해 둔 입력값 복원 → 단계 이동
+    selectType(snap.type, card);
+    WIZ_FIELD_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && snap.fields && snap.fields[id] !== undefined) el.value = snap.fields[id];
+    });
+    if (snap.paper) {
+      const chip = document.querySelector('.paper-chip[data-paper="' + snap.paper + '"]');
+      if (chip) selectPaper(snap.paper, chip);
+    }
+    goWizStep(Math.max(0, Math.min(WIZ_TOTAL - 1, Number(snap.step) || 0)));
+    return true;
+  }
+
+  // ── ⚙️ 선생님 메뉴 (마스터 프롬프트 4장) ──────────────────
+  // 데모 ↔ 연동을 잇는 다리. 학생 링크(#c=)로 접속했거나
+  // Apps Script가 직접 서빙 중이면 메뉴를 화면에서 아예 제거한다.
+  function initTeacherMenu() {
+    const wrap = document.getElementById('teacherMenuWrap');
+    if (!wrap) return;
+    const fromStudentLink = location.hash.includes('#c=');
+    if (_mode === 'gas' || fromStudentLink) {
+      wrap.remove();               // 숨김이 아니라 제거 — 복원 불가
+    } else {
+      updateTeacherMenuUI();
+    }
+    updateDemoBadge();
+  }
+
+  function updateDemoBadge() {
+    const b = document.getElementById('demoBadge');
+    if (b) b.style.display = (_mode === 'demo') ? 'block' : 'none';
+  }
+
+  function toggleTeacherMenu() {
+    const p = document.getElementById('teacherMenuPanel');
+    p.style.display = (p.style.display === 'none') ? 'block' : 'none';
+  }
+
+  function _tmStatus(msg, ok) {
+    const el = document.getElementById('tmStatus');
+    if (!el) return;
+    el.textContent   = msg;
+    el.style.color   = ok ? '#166534' : '#b91c1c';
+  }
+
+  // [연결하기] — 주소 형식 확인 → 접수 창구에 노크(getBuildInfo) →
+  // 정품 서명이 오면 저장하고 새로고침 없이 연동 모드로 전환
+  function connectSheet() {
+    const url = (document.getElementById('execUrlInput').value || '').trim();
+    if (!url.startsWith('https://') || url.indexOf('/exec') === -1) {
+      _tmStatus('주소를 확인해 주세요. 웹앱 주소는 https://로 시작하고 /exec가 들어 있어요.', false);
+      return;
+    }
+    _tmStatus('연결을 확인하는 중이에요...', true);
+    requestSheet(url, 'getBuildInfo', [])
+      .then(info => {
+        if (!info || !info.sig) throw new Error('서명 없음');
+        localStorage.setItem('execUrl:' + APP_ID, url);
+        _execUrl = url;
+        _mode    = 'linked';
+        _tmStatus('연결되었어요! 이제 학생 기록이 구글 시트에 저장돼요.', true);
+        buildStudentLink(url);
+        updateTeacherMenuUI();
+        updateDemoBadge();
+        loadRoster();              // 우리 반 명단으로 즉시 교체
+      })
+      .catch(() => _tmStatus('연결하지 못했어요. 주소가 맞는지, 배포 액세스 권한이 "모든 사용자"인지 확인해 주세요.', false));
+  }
+
+  function disconnectSheet() {
+    localStorage.removeItem('execUrl:' + APP_ID);
+    _execUrl = '';
+    _mode    = 'demo';
+    document.getElementById('studentLinkBox').style.display = 'none';
+    document.getElementById('execUrlInput').value = '';
+    _tmStatus('연결을 해제했어요. 데모 모드로 돌아갑니다.', true);
+    updateTeacherMenuUI();
+    updateDemoBadge();
+    loadRoster();
+  }
+
+  let _studentLink = '';
+  function buildStudentLink(url) {
+    const base = window.location.href.split('#')[0];
+    _studentLink = base + '#c=' + encodeURIComponent(url);
+    document.getElementById('studentLinkText').textContent = _studentLink;
+    document.getElementById('studentLinkBox').style.display = 'block';
+    buildTeacherLink(url);   // 선생님 대시보드 링크도 함께 준비
+  }
+
+  // 선생님 대시보드 링크 — 같은 폴더의 teacher.html 로 연결
+  let _teacherLink = '';
+  function buildTeacherLink(url) {
+    const dir = window.location.href.split('#')[0].replace(/[^\/]*$/, '');
+    _teacherLink = dir + 'teacher.html#c=' + encodeURIComponent(url);
+    const el = document.getElementById('teacherLinkText');
+    if (el) el.textContent = _teacherLink;
+  }
+  function copyTeacherLink() {
+    if (!_teacherLink) return;
+    navigator.clipboard.writeText(_teacherLink)
+      .then(() => _tmStatus('대시보드 링크를 복사했어요. 선생님만 쓰시는 주소예요.', true))
+      .catch(() => alert(_teacherLink));
+  }
+  function openTeacherDash() {
+    if (!_teacherLink) return;
+    window.open(_teacherLink, '_blank');
+  }
+
+  function copyStudentLink() {
+    if (!_studentLink) return;
+    navigator.clipboard.writeText(_studentLink)
+      .then(() => _tmStatus('학생 링크를 복사했어요! 클래스룸이나 메신저에 붙여넣어 주세요.', true))
+      .catch(() => alert(_studentLink));
+  }
+
+  function updateTeacherMenuUI() {
+    const inp = document.getElementById('execUrlInput');
+    const dis = document.getElementById('disconnectBtn');
+    if (!inp || !dis) return;
+    if (_mode === 'linked' && _execUrl) {
+      inp.value = _execUrl;
+      dis.style.display = 'block';
+      buildStudentLink(_execUrl);
+      _tmStatus('연결된 상태예요.', true);
+    } else {
+      dis.style.display = 'none';
+    }
+  }
+
+  // ── 전역 상태 ──────────────────────────────────────────
+  let studentName    = '';
+  let currentType    = '';
+  let currentMode    = 'template';
+  let userStats      = { delivered: 0, totalScore: 0, stamps: [], letters: [] };
+  const STAMPS       = ['🌸','🌟','🎀','🦋','🌈'];
+
+  // 공유 링크 관련
+  let _currentLetterId = '';
+  let _shareUrl        = '';
+
+  const TYPE_NAMES = {
+    thanks:'🙏 감사 편지', congrats:'🎉 축하 편지',
+    comfort:'💝 위로 편지', invitation:'🎈 초대 편지',
+    apology:'🙇 사과 편지', custom:'✍️ 나만의 편지'
+  };
+
+  const TEMPLATES = {
+    thanks: {
+      recipient: '예: "○○에게", "○○ 선생님께", "사랑하는 ○○에게"',
+      greeting:  '따뜻하게 인사해보세요! 예: "안녕하세요", "잘 지내고 계시죠?"',
+      body:      ['어떤 도움을 받았는지 구체적으로 써보세요', '그 도움이 나에게 어떤 의미였는지 표현해보세요', '감사하는 마음을 진심으로 전해보세요'],
+      bodyPh:    '도움을 주셔서 정말 감사합니다...',
+      closing:   '마지막 인사와 함께 앞으로의 다짐이나 소망을 써보세요',
+      replies:   ['정말 고마워! 나도 기뻐.', '네 편지를 받고 행복했어. 고마워!']
+    },
+    congrats: {
+      recipient: '예: "○○에게", "○○야/아", "축하하고 싶은 ○○에게"',
+      greeting:  '밝고 기쁜 인사로 시작해보세요! 예: "안녕!", "잘 지내고 있어?"',
+      body:      ['무엇을 축하하는지 구체적으로 써보세요', '상대방의 노력과 성과를 칭찬해보세요', '진심으로 기쁜 마음을 함께 나눠보세요'],
+      bodyPh:    '정말 축하해! 열심히 노력한 게 느껴져...',
+      closing:   '앞으로도 응원한다는 말과 함께 마무리 인사를 써보세요',
+      replies:   ['와, 편지 받고 눈물 날 것 같아! 감동이야.', '정말 기뻐서 소리 질렀어. 고마워!']
+    },
+    comfort: {
+      recipient: '예: "○○에게", "힘내길 바라는 ○○에게"',
+      greeting:  '부드럽고 따뜻하게 인사해보세요! 예: "요즘 어때?", "잘 지내고 있어?"',
+      body:      ['상대방의 힘든 마음을 이해한다고 표현해보세요', '따뜻한 위로의 말을 건네보세요', '항상 함께하겠다는 마음을 전해보세요'],
+      bodyPh:    '많이 힘들었겠다. 나는 항상 네 편이야...',
+      closing:   '용기를 북돋아주는 말과 함께 마무리 인사를 써보세요',
+      replies:   ['네 편지 읽고 힘이 났어. 정말 고마워.', '눈물이 났어. 네가 있어서 다행이야.']
+    },
+    invitation: {
+      recipient: '예: "○○에게", "함께하고 싶은 ○○에게"',
+      greeting:  '설레는 마음으로 인사해보세요! 예: "안녕!", "잘 지내고 있지?"',
+      body:      ['언제, 어디서, 무엇을 하는지 구체적으로 써보세요', '왜 초대하는지 이유를 전해보세요', '함께하면 즐거울 것 같다고 표현해보세요'],
+      bodyPh:    '함께해줬으면 해서 초대장을 써요...',
+      closing:   '꼭 와달라는 말과 함께 기대된다는 마음을 전해보세요',
+      replies:   ['우와, 꼭 갈게! 초대해줘서 고마워.', '기다리고 있을게. 정말 기대돼!']
+    },
+    apology: {
+      recipient: '예: "○○에게", "미안한 마음을 전하고 싶은 ○○에게"',
+      greeting:  '조심스럽고 진심 어린 인사로 시작해보세요! 예: "안녕", "잘 지내고 있어?"',
+      body:      ['무엇을 잘못했는지 솔직하게 인정해보세요', '진심으로 미안한 마음을 전해보세요', '앞으로 어떻게 할지 다짐을 써보세요'],
+      bodyPh:    '정말 미안해. 내가 잘못했어...',
+      closing:   '앞으로 더 잘하겠다는 다짐과 함께 마무리 인사를 써보세요',
+      replies:   ['괜찮아. 편지 고마워. 우리 다시 잘 지내자.', '용기 내서 사과해줘서 고마워.']
+    },
+    custom: {
+      recipient: '예: "○○에게", "소중한 ○○에게"',
+      greeting:  '마음을 담아 따뜻하게 인사해보세요',
+      body:      ['전하고 싶은 마음의 이유를 구체적으로 써보세요', '받는 사람이 어떻게 느낄지 생각하며 써보세요', '솔직하고 진심 어린 말로 표현해보세요'],
+      bodyPh:    '전하고 싶은 마음을 자유롭게 써보세요...',
+      closing:   '마무리 인사와 함께 앞으로의 바람을 담아보세요',
+      replies:   ['이런 편지를 받아서 정말 기뻐. 고마워!', '네 마음이 느껴져서 감동받았어!']
+    }
+  };
+
+  // ── 편지 쓰기 탭 클릭 핸들러 ───────────────────────────
+  function onWriteTabClick(btn) {
+    // 현재 편지 쓰기 탭에서 작성 중인 편지가 있으면 확인
+    const onWriteTab = document.getElementById('tab-write').style.display !== 'none';
+    if (onWriteTab && hasUnsavedLetter()) {
+      showConfirm(
+        '쓰던 편지가 있어요!<br>새 편지를 쓰면 지금 내용이 사라져요.<br><br>새 편지를 쓸까요?',
+        () => { backToTypes(); }
+      );
+      return;
+    }
+    // 작성 중이 아니면 유형 선택 화면으로
+    backToTypes();
+    if (btn) {
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+  }
+
+  // ── 탭 전환 ──────────────────────────────────────────
+  function switchTab(tab, btn) {
+    ['write','mailbox','guide'].forEach(t => {
+      const el = document.getElementById('tab-' + t);
+      if (t === tab) {
+        el.style.display = (t === 'write') ? 'flex' : 'block';
+      } else {
+        el.style.display = 'none';
+      }
+    });
+    // tab-concept은 모달로 처리되므로 탭 활성화에서 제외
+    document.getElementById('tab-concept').style.display = 'none';
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    else {
+      const idx = {write:1, mailbox:2, guide:3}[tab] ?? 1;
+      document.querySelectorAll('.tab')[idx].classList.add('active');
+    }
+    if (tab === 'mailbox') renderMailbox();
+    if (tab === 'write') {
+      const workspace = document.getElementById('workspace');
+      const sincerity = document.getElementById('sincerityScreen');
+      const result    = document.getElementById('resultScreen');
+      const noneActive = !workspace.classList.contains('active')
+                      && sincerity.style.display !== 'block'
+                      && result.style.display    !== 'block';
+      if (noneActive) document.getElementById('typeSelection').style.display = 'block';
+    }
+  }
+
+  // ── 개념학습 모달 ──────────────────────────────────────
+  let _pcSlide = 0;
+  const PC_TOTAL = 6;
+
+  function openConceptModal() {
+    _pcSlide = 0;
+    document.getElementById('conceptModal').classList.add('show');
+    // 점 생성
+    const dots = document.getElementById('pcDots');
+    dots.innerHTML = '';
+    for (let i = 0; i < PC_TOTAL; i++) {
+      const d = document.createElement('div');
+      d.className = 'pc-dot' + (i === 0 ? ' active' : '');
+      d.onclick = () => goPCSlide(i);
+      dots.appendChild(d);
+    }
+    updatePCUI();
+  }
+
+  function closeConceptModal() {
+    document.getElementById('conceptModal').classList.remove('show');
+  }
+
+  // 창 크기 변경 시 개념 슬라이드 재맞춤
+  window.addEventListener('resize', () => {
+    if (document.getElementById('conceptModal').classList.contains('show')) {
+      fitConceptSlides();
+    }
+  });
+
+  // 모달 바깥 클릭 시 닫기
+  document.getElementById('conceptModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('conceptModal')) closeConceptModal();
+  });
+
+  function goPCSlide(n) {
+    _pcSlide = Math.max(0, Math.min(PC_TOTAL - 1, n));
+    updatePCUI();
+  }
+  function nextPCSlide() { if (_pcSlide < PC_TOTAL - 1) goPCSlide(_pcSlide + 1); }
+  function prevPCSlide() { if (_pcSlide > 0) goPCSlide(_pcSlide - 1); }
+
+  // ── 슬라이드 자동 축소 공용 헬퍼 (스크롤 절대 방지) ──
+  // 슬라이드 내용이 영역보다 크면 비율을 유지하며 scale로 줄임 (높이·너비 모두 고려)
+  function _fitSlides(selector, innerClass) {
+    document.querySelectorAll(selector).forEach(slide => {
+      // 내용을 inner wrapper로 한 번만 감싸기
+      let inner = slide.querySelector(':scope > .' + innerClass);
+      if (!inner) {
+        inner = document.createElement('div');
+        inner.className = innerClass;
+        inner.style.cssText = 'width:100%;transform-origin:center center;flex-shrink:0;';
+        while (slide.firstChild) inner.appendChild(slide.firstChild);
+        slide.appendChild(inner);
+      }
+      // 측정 위해 원래 크기로
+      inner.style.transform = 'scale(1)';
+      const cs = getComputedStyle(slide);
+      const padV = parseFloat(cs.paddingTop)  + parseFloat(cs.paddingBottom);
+      const padH = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+      const availH = slide.clientHeight - padV - 2;
+      const availW = slide.clientWidth  - padH;
+      const needH  = inner.offsetHeight;
+      const needW  = Math.max(inner.offsetWidth, inner.scrollWidth);
+      let scale = 1;
+      if (needH > availH) scale = Math.min(scale, availH / needH);
+      if (needW > availW) scale = Math.min(scale, availW / needW);
+      inner.style.transform = `scale(${Math.max(scale, 0.5)})`;
+    });
+  }
+
+  // 개념 슬라이드가 화면보다 길면 자동 축소
+  function fitConceptSlides() { _fitSlides('.postcard-slide', 'pc-inner'); }
+
+  // 인트로 슬라이드 자동 축소
+  function fitIntroSlides() {
+    if (document.getElementById('introScreen').style.display === 'none') return;
+    _fitSlides('.intro-slide', 'intro-inner');
+  }
+
+  // 편지쓰기 왼쪽 안내 카드 자동 축소 (단계·예시·아이콘이 잘리지 않게)
+  function fitWizGuides() {
+    const ws = document.getElementById('workspace');
+    if (!ws || !ws.classList.contains('active')) return;
+    _fitSlides('.wiz-step.split .wiz-left', 'wl-inner');
+  }
+
+  // 창 크기 변경 시 인트로 슬라이드 재맞춤
+  window.addEventListener('resize', () => fitIntroSlides());
+  window.addEventListener('resize', () => fitWizGuides());
+
+  function updatePCUI() {
+    document.getElementById('pcTrack').style.transform = `translateX(-${_pcSlide * 100}%)`;
+    document.querySelectorAll('.pc-dot').forEach((d, i) => d.classList.toggle('active', i === _pcSlide));
+    document.getElementById('pcPrev').disabled = _pcSlide === 0;
+    requestAnimationFrame(() => fitConceptSlides());
+    const next = document.getElementById('pcNext');
+    if (_pcSlide === PC_TOTAL - 1) {
+      next.textContent = '✍️ 편지 쓰러 가기';
+      next.className   = 'pc-btn-next go-write';
+      next.onclick     = () => {
+        closeConceptModal();
+        switchTab('write', document.querySelectorAll('.tab')[1]);
+      };
+    } else {
+      next.textContent = '다음 →';
+      next.className   = 'pc-btn-next';
+      next.onclick     = nextPCSlide;
+    }
+  }
+
+  // ── 로그인: 드롭다운 명단 (마스터 프롬프트 표준) ────────
+  // 페이지가 열리면 '명단' 탭에서 학생 목록을 불러와 드롭다운을 채운다.
+  function loadRoster() {
+    const sel = document.getElementById('loginSelect');
+    callServer('getRosterList', [],
+      res => {
+        sel.innerHTML = '';
+        const first = document.createElement('option');
+        first.value = '';
+        first.textContent = res.success && res.students.length
+          ? '이름을 선택하세요' : '명단이 비어 있어요';
+        sel.appendChild(first);
+        if (res.success) {
+          res.students.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.name;
+            opt.dataset.no = s.no || '';
+            opt.textContent = s.no ? `${s.no}. ${s.name}` : s.name;
+            sel.appendChild(opt);
+          });
+        } else {
+          showLoginError(res.message || '명단을 불러오지 못했어요.');
+        }
+      },
+      () => {
+        sel.innerHTML = '<option value="">명단을 불러오지 못했어요</option>';
+        showLoginError('연결 오류가 발생했어요. 새로고침해 주세요.');
+      });
+  }
+
+  function showLoginError(msg) {
+    const el = document.getElementById('loginError');
+    el.textContent = '⚠️ ' + msg;
+    el.style.display = 'block';
+  }
+
+  function doLogin() {
+    const sel  = document.getElementById('loginSelect');
+    const name = sel ? sel.value : '';
+    if (!name) { showLoginError('먼저 이름을 선택해 주세요.'); return; }
+    document.getElementById('loginError').style.display = 'none';
+    studentName = name;
+    _studentNo  = (sel.selectedOptions[0] && sel.selectedOptions[0].dataset.no) || '';
+    document.getElementById('loginScreen').style.display = 'none';
+    const ta = document.getElementById('tabArea');
+    ta.style.display = 'none';
+    ta.style.flex    = '1';
+    document.getElementById('introGreeting').textContent =
+      `${studentName}님, 안녕하세요! 👋`;
+    document.getElementById('introScreen').style.display = 'flex';
+    goIntroSlide(0);
+
+    // 데모 모드: 쓰다 만 편지가 있으면 그 단계부터 이어서
+    demoResumeIfAny();
+
+    // Sheets에서 이전 편지 불러오기
+    callServer('getMyLetters', [studentName],
+      res => {
+        if (res.success && res.letters.length) {
+          userStats.letters = [];
+          res.letters.forEach(l => userStats.letters.push(l));
+          userStats.delivered = res.letters.length;
+          // 감동 지수 평균 복원
+          userStats.totalScore = res.letters.reduce(
+            (sum, l) => sum + (Number(l.score) || 0), 0);
+          // 우표 복원: 감동 지수 70점 이상 편지 1통당 1개 (최대 5개)
+          const earned = Math.min(
+            res.letters.filter(l => (Number(l.score) || 0) >= 70).length,
+            STAMPS.length);
+          userStats.stamps = STAMPS.slice(0, earned);
+          updateStats();
+        }
+      });
+  }
+
+  // ── 인트로 슬라이드 ────────────────────────────────────
+  let _introSlide = 0;
+  const INTRO_TOTAL = 3;
+
+  function goIntroSlide(n) {
+    _introSlide = Math.max(0, Math.min(INTRO_TOTAL - 1, n));
+    document.getElementById('introTrack').style.transform =
+      `translateX(-${_introSlide * 100}%)`;
+    requestAnimationFrame(() => fitIntroSlides());
+    // 점 업데이트
+    for (let i = 0; i < INTRO_TOTAL; i++) {
+      const dot = document.getElementById('introDot' + i);
+      if (dot) dot.classList.toggle('active', i === _introSlide);
+    }
+    // 버튼 상태
+    const prev = document.getElementById('introPrev');
+    const next = document.getElementById('introNext');
+    if (prev) prev.disabled = _introSlide === 0;
+    if (next) {
+      if (_introSlide === INTRO_TOTAL - 1) {
+        next.style.display = 'none';
+      } else {
+        next.style.display = 'block';
+        next.textContent = '다음 →';
+      }
+    }
+  }
+  function nextIntroSlide() { goIntroSlide(_introSlide + 1); }
+  function prevIntroSlide() { goIntroSlide(_introSlide - 1); }
+
+  // ── 홈 버튼: 처음(인트로) 화면으로 ─────────────────────
+  function goHome() {
+    if (hasUnsavedLetter()) {
+      showConfirm(
+        '쓰던 편지가 있어요!<br>처음 화면으로 가면 작성 중인 내용이 사라져요.<br><br>그래도 갈까요?',
+        () => doGoHome()
+      );
+    } else {
+      doGoHome();
+    }
+  }
+
+  function doGoHome() {
+    // 작성 화면 정리
+    document.getElementById('workspace').classList.remove('active');
+    document.getElementById('sincerityScreen').classList.remove('active');
+    document.getElementById('sincerityScreen').style.display = 'none';
+    document.getElementById('resultScreen').style.display = 'none';
+    document.getElementById('resultScreen').classList.remove('active');
+    document.getElementById('reviseBanner').style.display = 'none';
+    _pendingLetter = null;
+    // 탭 숨기고 인트로 표시
+    const ta = document.getElementById('tabArea');
+    ta.style.display = 'none';
+    document.getElementById('introScreen').style.display = 'flex';
+    goIntroSlide(0);
+  }
+
+  // 작성 중인 편지가 있는지 확인
+  function hasUnsavedLetter() {
+    const ws = document.getElementById('workspace');
+    if (!ws.classList.contains('active')) return false;
+    const ids = ['recipient','tplGreeting','tplBody','tplClosing'];
+    return ids.some(id => {
+      const el = document.getElementById(id);
+      return el && el.value.trim().length > 0;
+    });
+  }
+
+  // ── 인트로 → 개념 슬라이드 ─────────────────────────────
+  function startActivity() {
+    document.getElementById('introScreen').style.display = 'none';
+    const ta = document.getElementById('tabArea');
+    ta.style.display = 'flex';
+    ta.style.flex    = '1';
+    switchTab('write', document.querySelectorAll('.tab')[1]);
+    openConceptModal();
+  }
+
+  function skipConcept() {
+    document.getElementById('introScreen').style.display = 'none';
+    const ta = document.getElementById('tabArea');
+    ta.style.display = 'flex';
+    ta.style.flex    = '1';
+    switchTab('write', document.querySelectorAll('.tab')[1]);
+    document.getElementById('typeSelection').style.display = 'block';
+  }
+
+  // ── 슬라이드 로직 ──────────────────────────────────────
+  const TOTAL_SLIDES = 6;
+  let   currentSlide = 0;
+
+  function initSlides() {
+    // 구 슬라이드 요소 없음 (탭 제거됨) — 안전 처리
+    const dots = document.getElementById('progDots');
+    if (!dots) return;
+    currentSlide = 0;
+    dots.innerHTML = '';
+    for (let i = 0; i < TOTAL_SLIDES; i++) {
+      const d = document.createElement('div');
+      d.className = 'prog-dot' + (i === 0 ? ' active' : '');
+      d.onclick = () => goToSlide(i);
+      dots.appendChild(d);
+    }
+    updateSlideUI();
+  }
+
+  function goToSlide(n) {
+    currentSlide = Math.max(0, Math.min(TOTAL_SLIDES - 1, n));
+    updateSlideUI();
+  }
+
+  function nextSlide() {
+    if (currentSlide < TOTAL_SLIDES - 1) goToSlide(currentSlide + 1);
+  }
+  function prevSlide() {
+    if (currentSlide > 0) goToSlide(currentSlide - 1);
+  }
+
+  function updateSlideUI() {
+    // 트랙 이동
+    document.getElementById('slideTrack').style.transform =
+      `translateX(-${currentSlide * 100}%)`;
+
+    // 점 업데이트
+    document.querySelectorAll('.prog-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === currentSlide);
+    });
+
+    // 카운터
+    document.getElementById('slideCounter').textContent =
+      `${currentSlide + 1} / ${TOTAL_SLIDES}`;
+
+    // 버튼 상태
+    const prev = document.getElementById('btnPrev');
+    const next = document.getElementById('btnNext');
+    prev.disabled = currentSlide === 0;
+
+    if (currentSlide === TOTAL_SLIDES - 1) {
+      next.style.display = 'none';
+    } else {
+      next.style.display = 'block';
+      next.textContent   = '다음 →';
+    }
+  }
+
+  // ── 탭 전용 슬라이드 (💡 편지란?) ────────────────────
+  let currentSlide2 = 0;
+
+  function initSlides2() {
+    // 슬라이드가 이미 slideTrack2 안에 직접 있으므로 복사 불필요
+    currentSlide2 = 0;
+    const dots = document.getElementById('progDots2');
+    dots.innerHTML = '';
+    for (let i = 0; i < TOTAL_SLIDES; i++) {
+      const d = document.createElement('div');
+      d.className = 'prog-dot' + (i === 0 ? ' active' : '');
+      d.onclick = () => goToSlide2(i);
+      dots.appendChild(d);
+    }
+    updateSlideUI2();
+  }
+
+  function goToSlide2(n) {
+    currentSlide2 = Math.max(0, Math.min(TOTAL_SLIDES - 1, n));
+    updateSlideUI2();
+  }
+  function nextSlide2() { if (currentSlide2 < TOTAL_SLIDES - 1) goToSlide2(currentSlide2 + 1); }
+  function prevSlide2() { if (currentSlide2 > 0) goToSlide2(currentSlide2 - 1); }
+
+  function updateSlideUI2() {
+    document.getElementById('slideTrack2').style.transform =
+      `translateX(-${currentSlide2 * 100}%)`;
+    document.querySelectorAll('#progDots2 .prog-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === currentSlide2);
+    });
+    document.getElementById('slideCounter2').textContent =
+      `${currentSlide2 + 1} / ${TOTAL_SLIDES}`;
+    const prev  = document.getElementById('btnPrev2');
+    const next  = document.getElementById('btnNext2');
+    const write = document.getElementById('btnWrite2');
+    prev.disabled = currentSlide2 === 0;
+
+    if (currentSlide2 === TOTAL_SLIDES - 1) {
+      // 마지막 슬라이드: 다음 숨기고 편지 쓰러 가기 표시
+      next.style.display  = 'none';
+      write.style.display = 'block';
+    } else {
+      next.style.display  = 'block';
+      next.textContent    = '다음 →';
+      write.style.display = 'none';
+    }
+  }
+
+  // ── 이름 확인 (구버전 호환) ────────────────────────
+  function confirmName() { /* legacy - not used */ }
+
+  // ── 편지 유형 선택 ──────────────────────────────────
+  function selectType(type, el) {
+    currentType = type;
+    document.querySelectorAll('.letter-type-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('typeSelection').style.display = 'none';
+    document.getElementById('workspace').classList.add('active');
+    document.getElementById('workspaceTitle').textContent = TYPE_NAMES[type];
+    loadTemplate(type);
+  }
+
+  // ── 나만의 편지 유형 선택 ─────────────────────────────
+  function selectCustomType() {
+    const val = document.getElementById('customTypeInput').value.trim();
+    if (!val) {
+      document.getElementById('customTypeInput').focus();
+      document.getElementById('customTypeInput').placeholder = '마음을 입력해 주세요! 예: 응원, 격려...';
+      return;
+    }
+    currentType = 'custom';
+    TYPE_NAMES.custom = `✍️ ${val} 편지`;
+    document.getElementById('typeSelection').style.display = 'none';
+    document.getElementById('workspace').classList.add('active');
+    document.getElementById('workspaceTitle').textContent = `✍️ ${val} 편지`;
+    loadTemplate('custom');
+    FEEDBACK_MAP.custom.good = [
+      `전하고 싶은 '${val}'의 마음을 구체적으로 담았나요?`,
+      '받는 사람의 입장에서 생각하며 썼나요?',
+      '진심이 느껴지는 표현을 사용했나요?'
+    ];
+    FEEDBACK_MAP.custom.improve = `'${val}'의 마음을 담으려고 한 이유를 한 문장 더 써보면 더 진심이 전달돼요.`;
+  }
+
+  function backToTypes() {
+    document.getElementById('workspace').classList.remove('active');
+    document.getElementById('sincerityScreen').classList.remove('active');
+    document.getElementById('sincerityScreen').style.display = 'none';
+    document.getElementById('resultScreen').style.display = 'none';
+    document.getElementById('resultScreen').classList.remove('active');
+    document.getElementById('shareBox').style.display  = 'none';
+    document.getElementById('printBtn').style.display  = 'none';
+    document.getElementById('reviseBanner').style.display = 'none';
+    document.getElementById('typeSelection').style.display = 'block';
+    document.querySelectorAll('.letter-type-card').forEach(c => c.classList.remove('selected'));
+    switchTab('write', null);
+    _pendingLetter = null;
+    _currentLetterId = '';
+    _shareUrl = '';
+  }
+
+  // ── 모드 전환 (마법사로 대체됨, 호환용 stub) ──────────
+  function setMode(mode) {
+    currentMode = 'template'; // 항상 마법사 모드
+    updateCharCounter();
+  }
+
+  // 자유 작성 글자 수 이벤트 (마법사로 대체, 빈 처리)
+  // ['greetingFree','freeContent','closingFree'] — 요소 없음, 제거됨
+
+  // ── 편지쓰기 마법사 로직 ──────────────────────────────
+  let _wizStep = 0;
+  const WIZ_TOTAL = 8;
+  const WIZ_STEPS = [
+    { name: '받는 사람',     icon: '👤', inputId: 'recipient'   },
+    { name: '첫인사',       icon: '👋', inputId: 'tplGreeting' },
+    { name: '전하고 싶은 말', icon: '❤️', inputId: 'tplBody'     },
+    { name: '끝인사',       icon: '🙏', inputId: 'tplClosing'  },
+    { name: '추신',         icon: '✏️', inputId: 'tplPS', optional: true },
+    { name: '날짜',         icon: '📅', inputId: 'letterDate'  },
+    { name: '보내는 사람',   icon: '✍️', inputId: 'sender'      },
+    { name: '편지지',       icon: '🎨', inputId: '', optional: true },
+  ];
+
+  // 단계 스테퍼 생성 (아이콘 동그라미 + 이름 + 연결선)
+  function buildWizStepper() {
+    const wrap = document.getElementById('wizStepper');
+    if (!wrap || wrap.children.length) return;   // 한 번만 생성
+    WIZ_STEPS.forEach((s, i) => {
+      const item = document.createElement('div');
+      item.className = 'wstep';
+      item.id = 'wstep' + i;
+      item.innerHTML =
+        `<div class="wstep-dot"><span class="wstep-ico">${s.icon}</span><span class="wstep-chk">✔</span></div>` +
+        `<div class="wstep-name">${s.name}</div>`;
+      // 완료한 단계는 눌러서 되돌아갈 수 있음 (앞으로 건너뛰기는 불가)
+      item.onclick = () => { if (i < _wizStep) goWizStep(i); };
+      wrap.appendChild(item);
+      if (i < WIZ_STEPS.length - 1) {
+        const line = document.createElement('div');
+        line.className = 'wstep-line';
+        line.id = 'wline' + i;
+        wrap.appendChild(line);
+      }
+    });
+  }
+
+  function initWizard() {
+    _wizStep = 0;
+    buildWizStepper();
+    // 편지지 선택 초기화 (기본)
+    _selectedPaper = 'basic';
+    document.querySelectorAll('.paper-chip').forEach(c =>
+      c.classList.toggle('selected', c.dataset.paper === 'basic'));
+    updateWizUI();
+  }
+
+  function goWizStep(n) {
+    _wizStep = Math.max(0, Math.min(WIZ_TOTAL - 1, n));
+    updateWizUI();
+    // 해당 단계 입력칸에 포커스
+    const id = WIZ_STEPS[_wizStep].inputId;
+    setTimeout(() => { const el = document.getElementById(id); if(el) el.focus(); }, 350);
+  }
+
+  function nextWizStep() {
+    if (_wizStep < WIZ_TOTAL - 1) {
+      const step = WIZ_STEPS[_wizStep];
+      const id   = step.inputId;
+      const val  = document.getElementById(id)?.value.trim();
+      // 선택 단계는 비어 있어도 통과
+      if (!step.optional) {
+        if (!val) {
+          showAlert(`<strong>${step.name}</strong>을(를) 입력해야<br>다음으로 넘어갈 수 있어요!`);
+          return;
+        }
+        if (isGibberish(val)) {
+          showAlert(`${step.name}을(를)<br>바르게 다시 써볼까요?`);
+          return;
+        }
+      } else if (val && isGibberish(val)) {
+        showAlert(`${step.name}을(를)<br>바르게 다시 써볼까요?`);
+        return;
+      }
+      goWizStep(_wizStep + 1);
+    }
+  }
+
+  function prevWizStep() {
+    if (_wizStep > 0) goWizStep(_wizStep - 1);
+  }
+
+  function updateWizUI() {
+    // 트랙 이동
+    document.getElementById('wizTrack').style.transform =
+      `translateX(-${_wizStep * 100}%)`;
+
+    // 스테퍼 상태 갱신 (완료 ✔ / 현재 강조 / 예정 회색)
+    WIZ_STEPS.forEach((s, i) => {
+      const el = document.getElementById('wstep' + i);
+      if (!el) return;
+      el.classList.toggle('done',    i < _wizStep);
+      el.classList.toggle('current', i === _wizStep);
+      const line = document.getElementById('wline' + i);
+      if (line) line.classList.toggle('fill', i < _wizStep);
+    });
+
+    // 이전 버튼
+    document.getElementById('wizPrev').disabled = _wizStep === 0;
+
+    // 왼쪽 안내 카드가 길면 자동 축소 (아이콘·예시 잘림 방지)
+    requestAnimationFrame(() => fitWizGuides());
+
+    // 데모 모드: 진행 상황 책갈피 저장
+    demoSaveProgress();
+
+    // 다음/보내기 버튼
+    const next = document.getElementById('wizNext');
+    if (_wizStep === WIZ_TOTAL - 1) {
+      next.textContent  = '💌 편지 보내기';
+      next.style.background = 'linear-gradient(135deg,#f093fb,#f5576c)';
+      next.onclick = sendLetter;
+      // 미리보기 버튼 표시
+      document.getElementById('wizPreviewBtn').style.display = 'flex';
+    } else {
+      next.textContent  = '다음 →';
+      next.style.background = 'linear-gradient(135deg,#7c3aed,#a855f7)';
+      next.onclick = nextWizStep;
+      document.getElementById('wizPreviewBtn').style.display = 'none';
+    }
+  }
+
+  // ── 미리보기 팝업 (다시보기 모달 재활용) ──────────────
+  function openWizPreview() {
+    const r = document.getElementById('recipient')?.value.trim()   || '';
+    const d = document.getElementById('letterDate')?.value.trim()  || '';
+    const s = document.getElementById('sender')?.value.trim()      || '';
+
+    document.getElementById('review-recipient').textContent = r;
+    document.getElementById('review-content').textContent   = gatherContent();
+    document.getElementById('review-date').textContent      = d;
+    document.getElementById('review-sender').textContent    = s;
+    const paperEl = document.getElementById('review-paper');
+    if (paperEl) paperEl.className = 'paper-' + _selectedPaper;
+
+    // 보내기 전 미리보기에서만 고쳐쓰기 버튼 표시
+    document.getElementById('reviewEditBtn').style.display = 'block';
+    document.getElementById('reviewCloseBtn').textContent  = '좋아요, 이대로! 👍';
+
+    const modal = document.getElementById('letterReviewModal');
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => fitReviewLetter());
+  }
+
+  // 미리보기에서 [고쳐 쓸래요] → 편지 내용을 그대로 둔 채 작성 단계로 복귀
+  function reviseFromPreview() {
+    closeWrittenLetter();
+    goWizStep(2);   // '전하고 싶은 말' 단계로 이동 (위 단계 표시로 다른 단계도 이동 가능)
+  }
+
+  function updateWizCounter() {
+    const content = gatherContent();
+    document.getElementById('charCounter').textContent = `글자 수: ${content.length}자`;
+  }
+
+  // ── 템플릿 힌트 로드 ──────────────────────────────
+  function loadTemplate(type) {
+    const t = TEMPLATES[type];
+    // 마법사 힌트 설정
+    if (document.getElementById('wHint0')) {
+      const guideLabel = '<div style="font-size:0.82em;color:#7c3aed;font-weight:bold;margin-bottom:4px;">💭 이런 내용을 담아보세요 (예시예요!)</div>';
+      document.getElementById('wHint0').innerHTML = guideLabel + t.recipient;
+      document.getElementById('wHint1').innerHTML = guideLabel + t.greeting;
+      document.getElementById('wHint2').innerHTML =
+        guideLabel + t.body.map((h, i) => `${i+1}. ${h}`).join('<br>');
+      document.getElementById('wHint3').innerHTML = guideLabel + t.closing;
+    }
+    document.getElementById('tplBody').placeholder = t.bodyPh || '';
+
+    // 오늘 날짜 자동 입력
+    const today   = new Date();
+    const dateStr = `${today.getFullYear()}년 ${today.getMonth()+1}월 ${today.getDate()}일`;
+    document.getElementById('letterDate').value = dateStr;
+
+    // 이전 입력값 초기화
+    ['recipient','tplGreeting','tplBody','tplClosing','tplPS','sender'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+
+    // 마법사 시작
+    // 편지지 기본값 초기화
+    _selectedPaper = 'basic';
+    document.querySelectorAll('.paper-chip').forEach((c, i) => {
+      c.classList.toggle('selected', i === 0);
+    });
+
+    initWizard();
+    updateCharCounter();
+  }
+
+  // ── 글자 수 카운터 ──────────────────────────────
+  function updateCharCounter() {
+    const content = gatherContent();
+    document.getElementById('charCounter').textContent = `글자 수: ${content.length}자`;
+  }
+
+  function gatherContent() {
+    const ps = (document.getElementById('tplPS')?.value || '').trim();
+    // 첫인사 / 전하고 싶은 말 / 끝인사 / 추신을 빈 줄로 구분해 문단 구성
+    return [
+      (document.getElementById('tplGreeting')?.value || '').trim(),
+      (document.getElementById('tplBody')?.value     || '').trim(),
+      (document.getElementById('tplClosing')?.value  || '').trim(),
+      ps ? '추신: ' + ps : ''
+    ].filter(Boolean).join('\n\n');
+  }
+
+  // (자유 작성 모드 제거됨 — 마법사로 대체)
+
+  // ── 편지 다시 쓰기 ──────────────────────────────
+  function clearLetter() {
+    if (!confirm('작성한 내용이 모두 사라져요. 계속할까요?')) return;
+    ['recipient','sender','tplGreeting','tplBody','tplClosing','tplPS','letterDate']
+      .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    updateCharCounter();
+  }
+
+  // ── 감동 지수 계산 ──────────────────────────────
+  const EMOTION_WORDS = ['감사','고마','사랑','축하','기쁘','행복','미안','죄송',
+                          '위로','힘내','응원','자랑스럽','소중','따뜻','진심'];
+
+  function calcScore(content) {
+    let score = 50;
+    const len = content.length;
+    if (len > 200) score += 20;
+    else if (len > 100) score += 15;
+    else if (len > 50)  score += 10;
+    else score += 5;
+
+    let used = [];
+    EMOTION_WORDS.forEach(w => { if (content.includes(w)) used.push(w); });
+    score += Math.min(used.length * 5, 30);
+    return { score: Math.min(score, 100), used };
+  }
+
+  // ── 등급 계산 ──────────────────────────────────
+  function getRank(n) {
+    if (n >= 15) return '🐉 전설의 용';
+    if (n >= 10) return '🦅 구름 위 독수리';
+    if (n >= 5)  return '🐦 파닥파닥 참새';
+    if (n >= 1)  return '🐥 뒤뚱뒤뚱 병아리';
+    return '😴 쿨쿨 잠자는 알';
+  }
+
+  // ── 편지 보내기: 1단계 — 유효성 검사 후 진심 화면으로 ──
+  let _pendingLetter = null;
+
+  // 이상한 입력 감지 (키보드 연타, 특수문자 도배, 의미없는 반복)
+  function isGibberish(text) {
+    const t = text.trim();
+    if (!t) return false;
+    // 자음/모음만 반복: ㅁㄴㅇ, ㅋㅋㅋ, ㅎㅎㅎ
+    if (/^[ㄱ-ㅎㅏ-ㅣ\s]{3,}$/.test(t)) return true;
+    // 영문 키보드 연타: asdf, qwer 등
+    if (/^[a-zA-Z]{4,}$/.test(t)) return true;
+    // 숫자만
+    if (/^[\d\s]{3,}$/.test(t)) return true;
+    // 같은 글자 3회 이상 반복: 아아아아, ㅋㅋㅋㅋ
+    if (/(.)\1{3,}/.test(t)) return true;
+    // 특수문자 도배
+    if (/^[^가-힣a-zA-Z\d\s]{3,}$/.test(t)) return true;
+    return false;
+  }
+
+  function showAlert(msg) {
+    // 커스텀 팝업
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = `
+      <div style="background:white;border-radius:20px;padding:30px 28px;max-width:320px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+        <div style="font-size:2.4em;margin-bottom:12px;">✏️</div>
+        <div style="font-size:1em;font-weight:bold;color:#1e293b;line-height:1.7;margin-bottom:20px;">${msg}</div>
+        <button style="background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;border:none;border-radius:12px;padding:12px 32px;font-size:1em;cursor:pointer;font-family:inherit;" onclick="this.closest('div[style*=fixed]').remove()">다시 쓸게요 ✍️</button>
+      </div>`;
+    document.body.appendChild(overlay);
+  }
+
+  // 예/아니요 확인 팝업
+  function showConfirm(msg, onYes) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    const box = document.createElement('div');
+    box.style.cssText = 'background:white;border-radius:20px;padding:30px 28px;max-width:340px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+    box.innerHTML = `
+      <div style="font-size:2.4em;margin-bottom:12px;">🏠</div>
+      <div style="font-size:1em;font-weight:bold;color:#1e293b;line-height:1.7;margin-bottom:22px;">${msg}</div>
+      <div style="display:flex;gap:10px;">
+        <button class="cf-no" style="flex:1;background:#f1f5f9;color:#475569;border:none;border-radius:12px;padding:12px;font-size:1em;cursor:pointer;font-family:inherit;">아니요</button>
+        <button class="cf-yes" style="flex:1;background:linear-gradient(135deg,#f093fb,#f5576c);color:white;border:none;border-radius:12px;padding:12px;font-size:1em;cursor:pointer;font-family:inherit;">네, 갈게요</button>
+      </div>`;
+    overlay.appendChild(box);
+    box.querySelector('.cf-no').onclick  = () => overlay.remove();
+    box.querySelector('.cf-yes').onclick = () => { overlay.remove(); if (onYes) onYes(); };
+    document.body.appendChild(overlay);
+  }
+
+  function sendLetter() {
+    // 마법사 필드에서 값 수집
+    const recipient = document.getElementById('recipient')?.value.trim()   || '';
+    const greeting  = document.getElementById('tplGreeting')?.value.trim() || '';
+    const body      = document.getElementById('tplBody')?.value.trim()     || '';
+    const closing   = document.getElementById('tplClosing')?.value.trim()  || '';
+    const date      = document.getElementById('letterDate')?.value.trim()  || '';
+    const sender    = document.getElementById('sender')?.value.trim()      || '';
+    const content   = gatherContent();
+
+    // 빈 칸 일괄 검사
+    const errors = [];
+    if (!recipient) errors.push('받는 사람');
+    if (!greeting)  errors.push('첫인사');
+    if (!body)      errors.push('전하고 싶은 말');
+    if (!closing)   errors.push('끝인사');
+    if (!date)      errors.push('날짜');
+    if (!sender)    errors.push('보내는 사람');
+
+    if (errors.length) {
+      showAlert(`아직 빈 칸이 있어요!<br><br><span style="color:#7c3aed;">[ ${errors.join(', ')} ]</span><br><br>모두 채운 뒤 다시 보내주세요.`);
+      return;
+    }
+
+    // 이상한 입력 감지
+    if (isGibberish(recipient)) { showAlert('받는 사람 이름을 바르게 입력해 주세요!'); return; }
+    if (isGibberish(greeting))  { showAlert('첫인사를 편지에 어울리게 다시 써볼까요?'); return; }
+    if (isGibberish(body))      { showAlert('전하고 싶은 내용을 진심을 담아 다시 써볼까요?'); return; }
+    if (isGibberish(closing))   { showAlert('끝인사를 편지에 어울리게 다시 써볼까요?'); return; }
+    if (isGibberish(sender))    { showAlert('보내는 사람 이름을 바르게 입력해 주세요!'); return; }
+
+    if (content.replace(/\s/g, '').length < 10) {
+      showAlert('편지 내용이 너무 짧아요!<br>전하고 싶은 말을 조금 더 써볼까요?');
+      return;
+    }
+
+    _pendingLetter = { recipient, sender, content, date, paper: _selectedPaper };
+    document.getElementById('workspace').classList.remove('active');
+    const ss = document.getElementById('sincerityScreen');
+    ss.classList.add('active');
+    ss.style.display = 'block';
+    resetSincerityScreen();
+  }
+
+  // ── 진심 슬라이더 라벨 ────────────────────────────
+  const SINCERITY_LABELS = {
+    1: '조금 담겼어요 😶',
+    2: '어느 정도 담겼어요 🙂',
+    3: '꽤 담겼어요 😊',
+    4: '많이 담겼어요 🥰',
+    5: '있는 힘껏 담았어요 💖'
+  };
+  function updateSincerityLabel(val) {
+    document.getElementById('sincerityLabel').textContent = SINCERITY_LABELS[val] || '';
+  }
+
+  // ── 체크리스트 토글 ──────────────────────────────
+  function toggleCheck(el) {
+    el.classList.toggle('checked');
+    el.querySelector('.check-box').textContent =
+      el.classList.contains('checked') ? '✓' : '';
+  }
+
+  // ── 체크된 항목 수집 ─────────────────────────────
+  function getCheckedActions() {
+    return Array.from(document.querySelectorAll('.check-item.checked'))
+      .map(el => el.dataset.val);
+  }
+
+  // ── 진심 화면 초기화 ─────────────────────────────
+  function resetSincerityScreen() {
+    document.getElementById('sinceritySlider').value = '3';
+    updateSincerityLabel(3);
+    document.querySelectorAll('.check-item').forEach(el => {
+      el.classList.remove('checked');
+      el.querySelector('.check-box').textContent = '';
+    });
+  }
+
+  // ── 다시 쓰기 버튼 ──────────────────────────────
+  function goBackToWrite() {
+    document.getElementById('sincerityScreen').classList.remove('active');
+    document.getElementById('sincerityScreen').style.display = 'none';
+    document.getElementById('workspace').classList.add('active');
+    _pendingLetter = null;
+  }
+
+  // ── 편지지 선택 ──────────────────────────────────────
+  let _selectedPaper = 'basic';
+  function selectPaper(paper, el) {
+    _selectedPaper = paper;
+    document.querySelectorAll('.paper-chip').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    demoSaveProgress();
+  }
+
+  // ── 내가 쓴 편지 다시 보기 ──────────────────────────────
+  function showWrittenLetter() {
+    if (!_pendingLetter) return;
+    const { recipient, sender, content, date, paper } = _pendingLetter;
+    document.getElementById('review-recipient').textContent = recipient || '';
+    document.getElementById('review-content').textContent   = content   || '';
+    document.getElementById('review-date').textContent      = date      || '';
+    document.getElementById('review-sender').textContent    = sender    || '';
+    // 편지지 적용
+    const paperEl = document.getElementById('review-paper');
+    if (paperEl) paperEl.className = 'paper-' + (paper || 'basic');
+
+    // 이미 작성 확정한 보기에서는 고쳐쓰기 버튼 숨김
+    document.getElementById('reviewEditBtn').style.display = 'none';
+    document.getElementById('reviewCloseBtn').textContent  = '다 읽었어요! 👍';
+
+    const modal = document.getElementById('letterReviewModal');
+    modal.style.display = 'flex';
+
+    // 편지 전체가 한 화면에 들어오도록 scale 계산
+    requestAnimationFrame(() => fitReviewLetter());
+  }
+
+  function fitReviewLetter() {
+    const stage = document.getElementById('review-stage');
+    const paper = document.getElementById('review-paper');
+    if (!stage || !paper) return;
+
+    // 일단 원본 크기로 측정
+    paper.style.transform = 'scale(1)';
+    paper.style.marginBottom = '0px';
+    const pad = 28;
+    const stageH = stage.clientHeight - pad;
+    const stageW = stage.clientWidth  - pad;
+    const paperH = paper.offsetHeight;
+    const paperW = paper.offsetWidth;
+
+    const scaleW = stageW / paperW;
+    let scale = Math.min(stageH / paperH, scaleW);
+    scale = Math.min(scale, 1.6);   // 짧은 편지는 키우되 과하지 않게
+
+    // 긴 편지: 글자가 너무 작아지지 않도록 0.75배까지만 줄이고,
+    // 그래도 길면 모달 안에서 아래로 스크롤해서 읽는다.
+    const MIN_READABLE = 0.75;
+    const hint = document.getElementById('reviewScrollHint');
+    if (scale < MIN_READABLE) {
+      scale = Math.min(MIN_READABLE, scaleW);
+      stage.style.overflowY = 'auto';
+      if (hint) hint.style.display = 'block';
+    } else {
+      stage.style.overflowY = 'hidden';
+      if (hint) hint.style.display = 'none';
+    }
+
+    paper.style.transform = `scale(${scale})`;
+    // transform은 레이아웃 높이에 반영되지 않으므로 스크롤 높이 보정
+    paper.style.marginBottom = (paperH * (scale - 1)) + 'px';
+  }
+
+  function closeWrittenLetter() {
+    document.getElementById('letterReviewModal').style.display = 'none';
+  }
+
+  // 창 크기 변경 시 편지 다시 맞춤
+  window.addEventListener('resize', () => {
+    const modal = document.getElementById('letterReviewModal');
+    if (modal && modal.style.display === 'flex') fitReviewLetter();
+  });
+
+  // ── 편지 보내기: 2단계 — 진심 확인 후 실제 전송 ──
+  function confirmSend() {
+    if (!_pendingLetter) return;
+    const { recipient, sender, content } = _pendingLetter;
+    const sincerityLevel   = parseInt(document.getElementById('sinceritySlider').value);
+    const sincerityActions = getCheckedActions();   // 체크된 행동 목록
+
+    const { score, used } = calcScore(content);
+
+    const letter = {
+      type: currentType, recipient, sender, content, score,
+      sincerityLevel, sincerityActions,
+      paper: _pendingLetter.paper || 'basic',
+      letterId: '',
+      // 각 부분을 따로 저장 (고쳐쓰기에서 정확히 복원하기 위함)
+      greeting: document.getElementById('tplGreeting')?.value.trim() || '',
+      body:     document.getElementById('tplBody')?.value.trim()     || '',
+      closing:  document.getElementById('tplClosing')?.value.trim()  || '',
+      ps:       document.getElementById('tplPS')?.value.trim()       || '',
+      letterDate: document.getElementById('letterDate')?.value.trim() || '',
+      date: new Date().toLocaleDateString('ko-KR')
+    };
+    userStats.letters.push(letter);
+    const savedLetterRef = letter;   // 저장 후 letterId를 채우기 위한 참조
+    userStats.delivered++;
+    userStats.totalScore += score;
+    if (score >= 70 && userStats.stamps.length < STAMPS.length) {
+      userStats.stamps.push(STAMPS[userStats.stamps.length]);
+    }
+    updateStats();
+
+    document.getElementById('sincerityScreen').classList.remove('active');
+    document.getElementById('sincerityScreen').style.display = 'none';
+    showResult(score, letter);
+
+    // Google Sheets 저장
+    document.getElementById('savingOverlay').classList.add('show');
+    document.getElementById('saveStatus').textContent = '';
+
+    const payload = {
+      studentName:      studentName || sender,
+      letterType:       currentType,
+      mode:             currentMode,
+      recipient,
+      sender:           sender || '',
+      charCount:        content.length,
+      emotionScore:     score,
+      emotionWordCount: used.length,
+      emotionWords:     used,
+      content,
+      paper:            letter.paper || 'basic',
+      sincerityLevel,
+      sincerityNote:    sincerityActions.length > 0
+                          ? sincerityActions.join(', ')
+                          : '(선택 없음)',
+      revisionCount:    _revisionCount   // 고쳐쓰기 횟수
+    };
+
+    callServer('saveLetterData', [payload],
+      res => {
+        document.getElementById('savingOverlay').classList.remove('show');
+        if (res.success) {
+          demoClearProgress();   // 완료했으므로 이어하기 책갈피 삭제
+
+          if (res.demo) {
+            // 데모 모드: 이 기기에만 저장됨을 분명히 알림 (공유 링크 없음)
+            document.getElementById('saveStatus').textContent =
+              '📱 이 기기에만 저장됐어요. 선생님이 구글 시트를 연결하면 진짜 편지를 보낼 수 있어요!';
+          } else {
+            document.getElementById('saveStatus').textContent = '✅ 편지를 저장했어요!';
+          }
+
+          // 공유 링크 생성 (데모가 아닐 때만)
+          if (res.letterId && !res.demo) {
+            _currentLetterId = res.letterId;
+            savedLetterRef.letterId = res.letterId;   // 우편함 링크용
+            document.getElementById('shareBox').style.display  = 'block';
+            document.getElementById('printBtn').style.display  = 'block';
+            // 앱 기본 URL 가져와서 링크 구성
+            makeLetterLink(res.letterId, link => {
+                _shareUrl = link;
+                document.getElementById('shareUrl').textContent = _shareUrl;
+              });
+          }
+        } else {
+          document.getElementById('saveStatus').textContent = '⚠️ 저장 중 오류가 발생했어요.';
+        }
+      },
+      () => {
+        document.getElementById('savingOverlay').classList.remove('show');
+        document.getElementById('saveStatus').textContent = '⚠️ 저장 중 오류가 발생했어요.';
+      });
+
+    _pendingLetter = null;
+  }
+
+  // ── 편지 유형별 구체 피드백 정의 ─────────────────────
+  // 각 유형마다 [잘한 점, 보완할 점, 고쳐쓰기 힌트] 구조
+  const FEEDBACK_MAP = {
+    thanks: {
+      good:   ['구체적인 감사의 이유를 썼나요?', '받는 사람이 어떤 도움을 줬는지 분명히 표현됐나요?', '진심 어린 마음이 느껴지나요?'],
+      improve: '어떤 도움이 나에게 어떤 의미였는지 한 문장 더 써보면 더 따뜻한 편지가 돼요.',
+    },
+    congrats: {
+      good:   ['무엇을 축하하는지 분명히 썼나요?', '상대방의 노력을 인정하는 말이 있나요?', '함께 기뻐하는 마음이 느껴지나요?'],
+      improve: '상대방이 얼마나 열심히 했는지 구체적으로 언급하면 더 감동적인 편지가 돼요.',
+    },
+    comfort: {
+      good:   ['상대방의 힘든 마음을 이해한다고 표현했나요?', '따뜻한 위로의 말이 담겼나요?', '곁에 있겠다는 마음이 전달되나요?'],
+      improve: '위로는 해결책보다 "네 마음을 알아"라는 공감이 먼저예요. 공감하는 말을 더 써보세요.',
+    },
+    invitation: {
+      good:   ['언제, 어디서 하는지 분명히 썼나요?', '왜 초대하는지 이유를 전했나요?', '함께하면 즐거울 것 같다는 기대감이 느껴지나요?'],
+      improve: '초대받는 사람이 왜 특별히 오길 바라는지 한 문장 더 써보면 더 설레는 편지가 돼요.',
+    },
+    apology: {
+      good:   ['무엇을 잘못했는지 솔직하게 인정했나요?', '진심으로 미안한 마음이 느껴지나요?', '앞으로의 다짐이 담겼나요?'],
+      improve: '사과는 변명 없이 잘못을 인정하는 것이 핵심이에요. 다짐을 좀 더 구체적으로 써보세요.',
+    },
+    custom: {
+      good:   ['전하고 싶은 마음을 구체적으로 담았나요?', '받는 사람의 입장에서 생각하며 썼나요?', '진심이 느껴지는 표현을 사용했나요?'],
+      improve: '전하고 싶은 마음을 담으려 한 이유를 한 문장 더 써보면 더 진심이 전달돼요.',
+    }
+  };
+
+  // ── 결과 화면 ──────────────────────────────────────
+  let _lastLetter   = null;   // 고쳐쓰기를 위해 마지막 편지 보관
+  let _revisionCount = 0;     // 고쳐쓰기 횟수
+
+  function showResult(score, letter) {
+    _lastLetter = letter;
+    document.getElementById('workspace').classList.remove('active');
+    document.getElementById('resultScreen').style.display = 'block';
+
+    // ── ① 상단 코멘트 (점수 없이 격려 메시지만) ──
+    const len  = (letter.content || '').length;
+    let comment = '💌 편지를 완성했어요! 아래 피드백을 확인해 보세요.';
+    if (len > 200)      comment = '💖 정성이 듬뿍 담긴 긴 편지예요! 대단해요!';
+    else if (len > 100) comment = '😊 충분히 마음을 담아 썼어요!';
+    else if (len > 50)  comment = '👍 잘 썼어요! 조금 더 쓰면 더 좋아질 거예요.';
+    document.getElementById('emotionComment').textContent = comment;
+
+    // ── ② 격려 피드백 (글자 수 기반) ──
+    const fl = document.getElementById('feedbackList');
+    const typeMessages = {
+      thanks:     ['감사하는 마음을 글로 표현했어요! 받는 사람이 분명 기뻐할 거예요. 💛', '고마운 마음을 편지로 전하는 건 정말 용기 있는 행동이에요!'],
+      congrats:   ['함께 기뻐하는 마음이 느껴지는 편지예요! 🎉', '축하의 마음을 진심으로 담았어요. 받는 사람이 감동받을 거예요!'],
+      comfort:    ['힘든 친구의 마음을 헤아리며 편지를 썼어요. 정말 따뜻한 마음이에요. 💝', '위로의 말을 건네는 게 쉽지 않은데, 잘 표현했어요!'],
+      invitation: ['설레는 마음이 편지에 가득 담겼어요! 🎈', '초대하는 기쁨이 잘 전달될 것 같아요!'],
+      apology:    ['용기 내어 솔직하게 사과한 게 대단해요. 진심이 느껴져요. 🙇', '미안한 마음을 글로 표현하는 게 쉽지 않은데, 잘 했어요!'],
+      custom:     ['나만의 마음을 편지로 표현했어요! 특별한 편지가 될 거예요. ✍️', '자신의 마음을 솔직하게 담은 편지예요!']
+    };
+    const msgs = typeMessages[letter.type] || typeMessages.custom;
+    const msg  = len > 100 ? msgs[0] : msgs[1];
+
+    let encourageExtra = '';
+    if (len > 200)      encourageExtra = '특히 길고 정성스럽게 써줬어요. 받는 사람이 정말 감동받을 거예요! 🌟';
+    else if (len < 40)  encourageExtra = '조금 더 구체적인 내용을 담으면 마음이 더 잘 전달될 거예요.';
+
+    fl.innerHTML = `
+      <div style="background:linear-gradient(135deg,#f0fdf4,#fffbf0);border-radius:14px;
+        padding:18px 20px;margin-bottom:10px;border:1.5px solid #86efac;">
+        <div style="font-size:0.82em;font-weight:bold;color:#166534;margin-bottom:8px;">💌 편지 완성!</div>
+        <div style="font-size:0.97em;color:#1e293b;line-height:1.8;">${msg}</div>
+        ${encourageExtra ? `<div style="margin-top:10px;font-size:0.88em;color:#64748b;">${encourageExtra}</div>` : ''}
+      </div>`;
+
+    // 고쳐쓰기는 글자 수 짧을 때만 안내
+    const rp = document.getElementById('revisePrompt');
+    const rb = document.getElementById('reviseBtn');
+    if (len < 40) {
+      document.getElementById('reviseHint').textContent =
+        '받는 사람과의 구체적인 기억이나 감정을 한 문장 더 써보면 훨씬 좋아져요!';
+      rp.style.display = 'block';
+      rb.style.display = 'block';
+    } else {
+      rp.style.display = 'none';
+      rb.style.display = 'none';
+    }
+
+    // ── 우표 ──
+    const isNew = score >= 70 && userStats.stamps.length > 0;
+    document.getElementById('rewardTitle').textContent =
+      isNew ? '🎉 새로운 우표를 획득했어요!' : '📮 우표 수집 현황';
+    const sd = document.getElementById('stampDisplay');
+    sd.innerHTML = '';
+    STAMPS.forEach((s, i) => {
+      const d = document.createElement('div');
+      d.className = 'stamp' + (userStats.stamps[i] ? ' earned' : '');
+      d.textContent = userStats.stamps[i] || '';
+      sd.appendChild(d);
+    });
+  }
+
+  // ── 고쳐쓰기 ────────────────────────────────────────
+  function startRevise() {
+    if (!_lastLetter) return;
+    _revisionCount++;
+    document.getElementById('resultScreen').style.display = 'none';
+    document.getElementById('workspace').classList.add('active');
+
+    // 기존 내용 복원 (각 칸을 정확히 되살림)
+    const l = _lastLetter;
+    document.getElementById('recipient').value   = l.recipient || '';
+    document.getElementById('sender').value      = l.sender    || '';
+    document.getElementById('tplGreeting').value = l.greeting  || '';
+    document.getElementById('tplBody').value     = l.body      || l.content || '';
+    document.getElementById('tplClosing').value  = l.closing   || '';
+    document.getElementById('tplPS').value       = l.ps        || '';
+    if (l.letterDate) document.getElementById('letterDate').value = l.letterDate;
+
+    // 본문 단계(3단계)로 이동
+    goWizStep(2);
+    updateCharCounter();
+
+    // 고쳐쓰기 배너 표시
+    const banner = document.getElementById('reviseBanner');
+    if (banner) banner.style.display = 'flex';
+  }
+
+  // ── 우편함 렌더링 ──────────────────────────────
+  function renderMailbox() {
+    const list = document.getElementById('mailList');
+    if (!userStats.letters.length) {
+      list.innerHTML = '<p style="text-align:center;color:#aaa;padding:40px;">아직 보낸 편지가 없어요. ✍️</p>';
+      return;
+    }
+    list.innerHTML = userStats.letters.map((l, idx) => {
+      const typeName = l.type && l.type.includes('편지')
+        ? l.type
+        : (TYPE_NAMES[l.type] || l.type);
+      const content  = l.content || '';
+      const preview  = content.slice(0, 80) + (content.length > 80 ? '...' : '');
+      const linkHtml = l.letterId
+        ? `<button onclick="event.stopPropagation();copyLink('${l.letterId}')" style="margin-top:8px;background:none;border:1px solid #86efac;border-radius:8px;padding:4px 12px;font-size:0.78em;color:#16a34a;cursor:pointer;font-family:inherit;">🔗 링크 복사</button>`
+        : '';
+      return `
+        <div class="mail-item" onclick="openMailboxLetter(${idx})" style="cursor:pointer;">
+          <div class="meta">${l.date} · ${typeName} → ${l.recipient || ''}</div>
+          <div style="font-size:0.9em;color:#555;white-space:pre-wrap;margin-bottom:4px;">${preview}</div>
+          <div style="font-size:0.78em;color:#7c3aed;font-weight:bold;margin-top:4px;">👆 눌러서 편지 전체 보기</div>
+          ${linkHtml}
+        </div>`;
+    }).join('');
+  }
+
+  // ── 보낸 편지함에서 편지 전체 보기 ──────────────────────
+  function openMailboxLetter(idx) {
+    const l = userStats.letters[idx];
+    if (!l) return;
+    document.getElementById('review-recipient').textContent = l.recipient || '';
+    document.getElementById('review-content').textContent   = l.content   || '';
+    document.getElementById('review-date').textContent      = l.date      || '';
+    document.getElementById('review-sender').textContent    = l.sender    || studentName || '';
+    const paperEl = document.getElementById('review-paper');
+    if (paperEl) paperEl.className = 'paper-' + (l.paper || 'basic');
+    // 우편함(이미 보낸 편지)에서는 고쳐쓰기 버튼 숨김
+    document.getElementById('reviewEditBtn').style.display = 'none';
+    document.getElementById('reviewCloseBtn').textContent  = '다 읽었어요! 👍';
+    const modal = document.getElementById('letterReviewModal');
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => fitReviewLetter());
+  }
+
+  function copyLink(letterId) {
+    makeLetterLink(letterId, url => {
+      if (!url) { alert('선생님이 구글 시트를 연결하면 진짜 편지 링크를 만들 수 있어요!'); return; }
+      navigator.clipboard.writeText(url).then(() => alert('✅ 링크가 복사됐어요!')).catch(() => alert(url));
+    });
+  }
+
+  // ── 링크 복사 ──────────────────────────────────────
+  function copyShareUrl() {
+    if (!_shareUrl) return;
+    navigator.clipboard.writeText(_shareUrl).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = '✅ 복사됨!';
+      setTimeout(() => { btn.textContent = '📋 복사'; }, 2000);
+    }).catch(() => {
+      // 구형 브라우저 fallback
+      const el = document.createElement('textarea');
+      el.value = _shareUrl;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = '✅ 복사됨!';
+      setTimeout(() => { btn.textContent = '📋 복사'; }, 2000);
+    });
+  }
+
+  // ── 인쇄 ────────────────────────────────────────────
+  function printLetter() {
+    if (!_lastLetter) return;
+    document.getElementById('pl-recipient').textContent = _lastLetter.recipient || '';
+    document.getElementById('pl-content').textContent   = _lastLetter.content   || '';
+    const _typed = (_lastLetter.sender || '').trim();
+    const _plSender = (_typed && studentName && _typed !== studentName)
+      ? `${_typed}(${studentName})`
+      : (_typed || studentName || '');
+    document.getElementById('pl-sender').textContent    = _plSender;
+    document.getElementById('pl-date').textContent      = _lastLetter.date      || new Date().toLocaleDateString('ko-KR');
+    // 편지지 적용
+    const plBody = document.querySelector('#printArea .pl-body');
+    if (plBody) plBody.className = 'pl-body paper-' + (_lastLetter.paper || 'basic');
+    window.print();
+  }
+
+  // ── 통계 업데이트 ──────────────────────────────
+  function updateStats() {
+    document.getElementById('deliveredCount').textContent = userStats.delivered;
+    const avg = userStats.delivered ? Math.round(userStats.totalScore / userStats.delivered) : 0;
+    document.getElementById('avgScore').textContent = avg + '%';
+    document.getElementById('stampCount').textContent = userStats.stamps.length + '/5';
+    document.getElementById('userRank').textContent = getRank(userStats.delivered);
+  }
+
+  // ── Scale 반응형 ────────────────────────────────
+  // 컨테이너는 항상 900px 고정 디자인.
+  // 화면이 좁으면 transform:scale()로 비율 그대로 축소.
+  // (레이아웃이 절대 깨지지 않음)
+  const DESIGN_WIDTH = 900;
+  const MIN_PADDING  = 4;   // 최소 여백 4px
+
+  function applyScale() {
+    const container = document.querySelector('.container');
+    if (!container) return;
+
+    // 너비는 CSS로 100% 처리, scale은 제거
+    container.style.transform      = '';
+    container.style.marginBottom   = '';
+  }
+
+  // 로드·리사이즈 시 실행
+  window.addEventListener('DOMContentLoaded', applyScale);
+  window.addEventListener('DOMContentLoaded', loadRoster);
+  window.addEventListener('DOMContentLoaded', initTeacherMenu);
+  window.addEventListener('DOMContentLoaded', () => {
+    WIZ_FIELD_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', demoSaveProgress);
+    });
+  });
+  window.addEventListener('resize', applyScale);
+</script>
+
+<script>
+/* 체험 모드 안내 배너 (전 앱 일관) */
+(function () {
+  function isDemo() {
+    try {
+      if (/[#&]c=/.test(location.hash || '')) return false;
+      if (typeof google !== 'undefined' && google.script && google.script.run) return false;
+      if (localStorage.getItem('execUrl:heart-post')) return false;
+      return true;
+    } catch (e) { return true; }
+  }
+  function show() {
+    if (document.getElementById('__demoBar')) return;
+    if (!isDemo()) return;
+    var bar = document.createElement('div');
+    bar.id = '__demoBar';
+    bar.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:2147483000;background:#1f2937;color:#fff;font-size:13px;line-height:1.45;padding:9px 38px calc(9px + env(safe-area-inset-bottom)) 14px;text-align:center;font-family:sans-serif;box-shadow:0 -2px 10px rgba(0,0,0,0.25);';
+    bar.textContent = '체험 모드예요 · 활동 기록은 이 기기에만 저장돼요(이어하기 가능). 선생님이 구글 시트를 연결하면 시트에 저장됩니다.';
+    var x = document.createElement('button');
+    x.type = 'button'; x.setAttribute('aria-label', '닫기'); x.textContent = '\u2715';
+    x.style.cssText = 'position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;border:0;color:#fff;font-size:16px;line-height:1;cursor:pointer;padding:6px;';
+    x.onclick = function () { try { bar.remove(); } catch (e) { bar.style.display = 'none'; } };
+    bar.appendChild(x);
+    document.body.appendChild(bar);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', show);
+  } else { show(); }
+})();
+</script>
+</body>
+</html>
