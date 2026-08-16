@@ -1763,9 +1763,9 @@
         지금은 체험(데모) 모드예요. 기록이 이 기기에만 저장돼요.
       </div>
 
-      <!-- ⚙️ 선생님 메뉴 — 학생 링크(#c=) 접속 시 화면에서 아예 제거됨 -->
+      <!-- ⚙️ 선생님 설정 — 학생 링크(#c=) 접속 시 화면에서 아예 제거됨 -->
       <div id="teacherMenuWrap" style="margin-top:14px;text-align:center;">
-        <button onclick="toggleTeacherMenu()" style="background:none;border:none;color:#94a3b8;font-size:0.85em;cursor:pointer;font-family:inherit;padding:6px 10px;">⚙️ 선생님 메뉴</button>
+        <button onclick="toggleTeacherMenu()" style="background:none;border:none;color:#94a3b8;font-size:0.85em;cursor:pointer;font-family:inherit;padding:6px 10px;">⚙️ 선생님 설정</button>
         <div id="teacherMenuPanel" style="display:none;margin-top:10px;padding:16px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;text-align:left;">
           <div style="font-size:0.85em;color:#475569;line-height:1.7;margin-bottom:10px;">
             우리 반 시트의 웹앱 주소(exec)를 연결하면<br>학생 기록이 구글 시트에 저장됩니다.
@@ -2587,7 +2587,7 @@
     return true;
   }
 
-  // ── ⚙️ 선생님 메뉴 (마스터 프롬프트 4장) ──────────────────
+  // ── ⚙️ 선생님 설정 (마스터 프롬프트 4장) ──────────────────
   // 데모 ↔ 연동을 잇는 다리. 학생 링크(#c=)로 접속했거나
   // Apps Script가 직접 서빙 중이면 메뉴를 화면에서 아예 제거한다.
   function initTeacherMenu() {
