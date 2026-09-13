@@ -348,7 +348,6 @@
       <div style="display:flex;align-items:flex-end;gap:6px;height:130px;" id="scoreChart">
         <div class="empty-wrap" style="padding:20px;width:100%;">데이터 없음</div>
       </div>
-      <div style="display:flex;gap:6px;margin-top:4px;" id="scoreChartLabels"></div>
     </div>
   </div>
 
@@ -474,6 +473,14 @@
     sincerity: 9, actions: 10, revision: 11, content: 12
   };
 
+  // 학생이 적은 글자를 표에 넣을 때 쓰는 안전 처리.
+  // 이름이나 받는 사람 칸에 < 나 따옴표가 들어와도 표가 깨지지 않습니다.
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
   // ── 학급 자료 가져오기 ──────────────────────────────────
   //   주소에 담긴 시트로 물어본다.
   function fetchClassData(cb) {
@@ -533,17 +540,23 @@
     const freeCount = allData.filter(r => String(r[COL.mode]).includes('자유')).length;
     const freeRate  = total ? Math.round(freeCount / total * 100) : 0;
 
-    const today = new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' });
-    const todayCount = allData.filter(r => String(r[COL.time]).startsWith(today.replace(/\./g, '-').replace(' ', '').slice(0,10))).length;
-    // simpler today check: just check if date string includes today's date portion
-    const todayStr = new Date().toISOString().slice(0, 10);
-    const todayCount2 = allData.filter(r => String(r[COL.time]).startsWith(todayStr)).length;
+    // 오늘 날짜는 한국 시각 기준으로 구합니다.
+    // toISOString()은 UTC라 오전 9시 이전에는 어제 날짜가 나옵니다.
+    const now      = new Date();
+    const todayStr = now.toLocaleDateString('sv-SE');              // 2026-09-14
+    const todayDot = now.toLocaleDateString('ko-KR');              // 2026. 9. 14.
+    // 시트의 시간 표기 방식이 무엇이든 걸리도록 두 형태를 모두 봅니다.
+    const todayCount = allData.filter(r => {
+      const t = String(r[COL.time] || '');
+      return t.startsWith(todayStr) || t.startsWith(todayDot) ||
+             t.startsWith(todayDot.replace(/\s/g, ''));
+    }).length;
 
     document.getElementById('sumTotal').textContent    = total;
     document.getElementById('sumStudents').textContent = students;
     document.getElementById('sumAvgScore').textContent = avgScore + '점';
     document.getElementById('sumFreeRate').textContent = freeRate + '%';
-    document.getElementById('sumToday').textContent    = todayCount2;
+    document.getElementById('sumToday').textContent    = todayCount;
   }
 
   // ── 차트 ──────────────────────────────────────────────
@@ -580,6 +593,8 @@
     const bandCounts = [0,0,0,0,0];
     allData.forEach(r => {
       const s = Number(r[COL.score]);
+      // 빈 칸·0점·숫자가 아닌 값이 '50-59' 칸에 쌓이지 않도록 걸러냅니다.
+      if (!Number.isFinite(s) || s <= 0) return;
       if (s >= 90) bandCounts[4]++;
       else if (s >= 80) bandCounts[3]++;
       else if (s >= 70) bandCounts[2]++;
@@ -618,15 +633,14 @@
     // 1. 체크리스트 행동 패턴 분석
     const actionCounts = {};
     ACTION_LABELS.forEach(a => actionCounts[a] = 0);
-    let totalWithActions = 0;
     allData.forEach(r => {
       const acts = String(r[COL.actions] || '');
       if (acts && acts !== '(선택 없음)') {
-        totalWithActions++;
         ACTION_LABELS.forEach(a => { if (acts.includes(a)) actionCounts[a]++; });
       }
     });
-    const leastDone = ACTION_LABELS
+    // sort()는 원본 배열을 바꿉니다. 복사본을 정렬해야 항목 순서가 유지됩니다.
+    const leastDone = [...ACTION_LABELS]
       .sort((a, b) => actionCounts[a] - actionCounts[b])[0];
     const leastCount = actionCounts[leastDone];
     const leastPct   = allData.length ? Math.round(leastCount / allData.length * 100) : 0;
@@ -638,8 +652,10 @@
 
     // 3. 진심 온도 평균
     const sincList = allData.map(r => Number(r[COL.sincerity])).filter(n => n > 0);
-    const sincAvg  = sincList.length ? (sincList.reduce((a,b)=>a+b,0)/sincList.length).toFixed(1) : '—';
-    const sincEmoji = sincAvg >= 4 ? '🥰' : sincAvg >= 3 ? '😊' : sincAvg >= 2 ? '🙂' : '😶';
+    const sincNum  = sincList.length ? sincList.reduce((a,b)=>a+b,0)/sincList.length : null;
+    const sincAvg  = sincNum === null ? '—' : sincNum.toFixed(1);
+    const sincEmoji = sincNum === null ? '😶'
+                    : sincNum >= 4 ? '🥰' : sincNum >= 3 ? '😊' : sincNum >= 2 ? '🙂' : '😶';
 
     // 4. 자유 작성 도전 비율
     const freeCount = allData.filter(r => String(r[COL.mode]).includes('자유')).length;
@@ -658,7 +674,7 @@
 
     panel.innerHTML = [
       insightCard('🔲','가장 적게 실천한 행동', `${leastPct}%`,
-        `"${leastDone}" — ${leastCount}명만 실천`,
+        `"${leastDone}" — 전체 ${allData.length}건 중 ${leastCount}건만 실천`,
         '#f97316',
         leastPct < 40
           ? `다음 수업에서 "${leastDone}"를 직접 해보는 활동을 넣어보세요.`
@@ -674,11 +690,11 @@
       insightCard('💖','평균 진심 온도', `${sincEmoji} ${sincAvg}`,
         `5점 만점 / ${sincList.length}명 응답`,
         '#ec4899',
-        sincAvg < 3
+        (sincNum !== null && sincNum < 3)
           ? `진심 온도가 낮아요. "이 편지를 받으면 어떤 기분일까?" 역할극을 해보세요.`
           : null),
 
-      insightCard('✏️','자유 작성 도전', `${freePct}%`,
+      insightCard('🖊️','자유 작성 도전', `${freePct}%`,
         `${freeCount}명이 자유 작성 선택`,
         '#22c55e',
         freePct < 30
@@ -740,11 +756,11 @@
               ? acts.split(',').filter(Boolean).length : 0;
             return `
             <tr>
-              <td style="font-size:0.8em;color:#64748b;">${String(r[COL.time]).slice(0,16)}</td>
-              <td><strong>${r[COL.name]}</strong></td>
-              <td><span class="type-chip">${r[COL.type]}</span></td>
-              <td><span class="mode-chip">${r[COL.mode]}</span></td>
-              <td style="text-align:center;">${r[COL.charCount]}자</td>
+              <td style="font-size:0.8em;color:#64748b;">${esc(String(r[COL.time]).slice(0,16))}</td>
+              <td><strong>${esc(r[COL.name])}</strong></td>
+              <td><span class="type-chip">${esc(r[COL.type])}</span></td>
+              <td><span class="mode-chip">${esc(r[COL.mode])}</span></td>
+              <td style="text-align:center;">${esc(r[COL.charCount])}자</td>
               <td style="text-align:center;font-size:1.2em;">${sincEmoji}</td>
               <td style="text-align:center;">
                 <span style="background:${actCount >= 3 ? '#dcfce7' : actCount >= 1 ? '#fef9c3' : '#fee2e2'};
@@ -792,17 +808,18 @@
         <strong>${rev > 0 ? '✏️ ' + rev + '회' : '없음'}</strong>고쳐쓰기
       </div>
       <div class="modal-score-item" style="flex:1;">
-        <strong style="font-size:0.82em;font-weight:normal;line-height:1.6;word-break:keep-all;">${acts}</strong>실천한 행동
+        <strong style="font-size:0.82em;font-weight:normal;line-height:1.6;word-break:keep-all;">${esc(acts)}</strong>실천한 행동
       </div>
     `;
     document.getElementById('modalContent').textContent = r[COL.content] || '(내용 없음)';
     document.getElementById('modalOverlay').classList.add('show');
   }
 
+  // 닫기 버튼은 인자 없이 부르고, 바깥 어두운 영역 클릭은 event를 넘깁니다.
+  // 모달 안쪽(본문·점수 칩 등)을 클릭했을 때는 닫히지 않아야 합니다.
   function closeModal(e) {
-    if (!e || e.target === document.getElementById('modalOverlay') || e.type !== 'click' || !e.target.classList.contains('modal')) {
-      document.getElementById('modalOverlay').classList.remove('show');
-    }
+    if (e && e.target !== document.getElementById('modalOverlay')) return;
+    document.getElementById('modalOverlay').classList.remove('show');
   }
 
   // ── 초기 실행 ──────────────────────────────────────
