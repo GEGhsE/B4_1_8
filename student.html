@@ -24,16 +24,23 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
   <style>
+    /* 한국어 줄바꿈 — 낱말이 중간에서 끊기지 않게 화면 전체에 겁니다. */
+    html, body, body *, body *::before, body *::after {
+      word-break: keep-all;
+      overflow-wrap: normal;
+      word-wrap: normal;
+      line-break: strict;
+    }
+    /* 학생이 쓴 글과 주소는 띄어쓰기 없이 길게 이어질 수 있어
+       상자 밖으로 넘치지 않도록 이 자리에서만 끊습니다. */
+    textarea, input, .content-box, .letter-content, .pl-content,
+    #review-content, .mail-item, #studentLinkText, #teacherLinkText {
+      overflow-wrap: anywhere;
+    }
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      word-break: keep-all;     /* 한국어 어절(낱말+조사)을 통째로 유지 */
-      overflow-wrap: break-word;
-    }
-    /* 한국어 텍스트 줄바꿈: 어절 단위 유지 (조사 분리 방지) */
-    body, p, span, div, h1, h2, h3, strong, button, label, td, li, textarea, input {
-      word-break: keep-all;
     }
 
     html, body {
@@ -1405,8 +1412,19 @@
 
     /* ── 인쇄 스타일 ── */
     @media print {
-      /* 인쇄 시 앱 UI 전부 숨김 */
+      @page { size: A4 portrait; margin: 12mm; }
+
+      /* 저장할 때 앱 화면은 전부 숨기고 편지만 남긴다 */
       body > * { display: none !important; }
+
+      /* 편지지 무늬와 봉투 색이 저장한 파일에도 그대로 나오게 한다.
+         이걸 켜지 않으면 브라우저가 배경을 지우고 흰 종이로만 저장한다. */
+      #printArea, #printArea * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        color-adjust: exact;
+      }
+
       #printArea {
         display: block !important;
         font-family: 'Malgun Gothic', 'Nanum Gothic', sans-serif;
@@ -1415,6 +1433,7 @@
         margin: 0 auto;
         padding: 20px;
       }
+      .pl-envelope { break-inside: avoid; page-break-inside: avoid; }
       .pl-envelope {
         border: 3px solid #f5576c;
         border-radius: 8px;
@@ -1763,9 +1782,9 @@
         지금은 체험(데모) 모드예요. 기록이 이 기기에만 저장돼요.
       </div>
 
-      <!-- ⚙️ 선생님 설정 — 학생 링크(#c=) 접속 시 화면에서 아예 제거됨 -->
+      <!-- ⚙️ 선생님 메뉴 — 학생 링크(#c=) 접속 시 화면에서 아예 제거됨 -->
       <div id="teacherMenuWrap" style="margin-top:14px;text-align:center;">
-        <button onclick="toggleTeacherMenu()" style="background:none;border:none;color:#94a3b8;font-size:0.85em;cursor:pointer;font-family:inherit;padding:6px 10px;">⚙️ 선생님 설정</button>
+        <button onclick="toggleTeacherMenu()" style="background:none;border:none;color:#94a3b8;font-size:0.85em;cursor:pointer;font-family:inherit;padding:6px 10px;">⚙️ 선생님 메뉴</button>
         <div id="teacherMenuPanel" style="display:none;margin-top:10px;padding:16px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;text-align:left;">
           <div style="font-size:0.85em;color:#475569;line-height:1.7;margin-bottom:10px;">
             우리 반 시트의 웹앱 주소(exec)를 연결하면<br>학생 기록이 구글 시트에 저장됩니다.
@@ -2278,7 +2297,7 @@
             <button class="btn" id="reviseBtn"
               style="flex:1;background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;display:none;"
               onclick="startRevise()">✏️ 고쳐쓰기</button>
-            <button class="btn btn-secondary" onclick="printLetter()" id="printBtn" style="display:none;">🖨️ 인쇄</button>
+            <button class="btn btn-secondary" onclick="printLetter()" id="printBtn" style="display:none;">💾 저장하기</button>
             <button class="btn btn-primary" onclick="switchTab('mailbox', null)">📬 우편함 보기</button>
           </div>
         </div>
@@ -2529,39 +2548,66 @@
   // 접속하자마자 모드 판별
   detectMode();
 
-  // ── 데모 모드 이어하기 (마스터 3-2: 단계 + 입력값 책갈피) ──
-  // 학생별로 쓰다 만 편지를 기기에 저장했다가, 같은 학생으로
-  // 재진입하면 그 단계부터 이어서 쓴다. 편지를 보내면(완료) 삭제.
+  // ── 이어하기 (같은 기기에서만) ───────────────────────────
+  // 학생이 쓰다 만 편지를 이 기기에 저장해 두었다가, 같은 이름으로
+  // 다시 들어오면 이어서 쓸지 물어본다. 편지를 보내면 지워진다.
+  // 저장하는 곳은 이 기기 하나뿐이라, 다른 기기에서는 이어지지 않는다.
   let _studentNo = '';
   const WIZ_FIELD_IDS = ['recipient','tplGreeting','tplBody','tplClosing','tplPS','letterDate','sender'];
 
   function _progressKey() {
-    return 'progress:' + APP_ID + ':' + (_studentNo || studentName || '');
+    return 'progress:' + APP_ID + ':' + (studentName || _studentNo || '');
   }
 
-  function demoSaveProgress() {
-    if (_mode !== 'demo' || !studentName || !currentType) return;
+  function _snapshotProgress() {
+    if (!studentName || !currentType) return null;
     const ws = document.getElementById('workspace');
-    if (!ws || !ws.classList.contains('active')) return;   // 편지 쓰는 중일 때만
+    if (!ws || !ws.classList.contains('active')) return null;   // 편지 쓰는 중일 때만
     const fields = {};
-    WIZ_FIELD_IDS.forEach(id => {
+    WIZ_FIELD_IDS.forEach(function (id) {
       const el = document.getElementById(id);
       if (el) fields[id] = el.value;
     });
-    const snap = { type: currentType, step: _wizStep, fields: fields, paper: _selectedPaper };
-    try { localStorage.setItem(_progressKey(), JSON.stringify(snap)); } catch (e) {}
+    return { type: currentType, step: _wizStep, fields: fields, paper: _selectedPaper };
   }
 
-  function demoClearProgress() {
-    if (_mode !== 'demo') return;
+  /** 화면이 바뀔 때마다 이 기기에 진행 내용을 저장한다. */
+  function saveProgressLocal() {
+    const snap = _snapshotProgress();
+    if (!snap) return;
+    try {
+      localStorage.setItem(_progressKey(), JSON.stringify({ state: snap, savedAt: Date.now() }));
+    } catch (e) {
+      // 저장 공간이 막혀 있어도 편지 쓰기는 멈추지 않는다.
+      console.error('이어하기 저장 실패: ' + e);
+    }
+  }
+
+  function clearProgressLocal() {
     try { localStorage.removeItem(_progressKey()); } catch (e) {}
   }
 
-  // 로그인 직후 호출: 책갈피가 있으면 쓰던 단계로 직행 (true 반환)
-  function demoResumeIfAny() {
-    if (_mode !== 'demo') return false;
-    let snap = null;
-    try { snap = JSON.parse(localStorage.getItem(_progressKey()) || 'null'); } catch (e) {}
+  function loadLocalProgress() {
+    try {
+      const raw = localStorage.getItem(_progressKey());
+      if (!raw) return null;
+      const o = JSON.parse(raw);
+      return (o && o.state && o.state.type) ? o : null;
+    } catch (e) { return null; }
+  }
+
+  /** 되살릴 만한 기록인지 본다. 아직 아무것도 안 썼으면 묻지 않는다. */
+  function isResumable(saved) {
+    if (!saved || !saved.state || !saved.state.type) return false;
+    const f = saved.state.fields || {};
+    const typedSomething = WIZ_FIELD_IDS.some(function (id) {
+      return String(f[id] || '').trim() !== '';
+    });
+    return typedSomething || Number(saved.state.step) > 0;
+  }
+
+  /** 저장해 둔 기록으로 쓰던 단계까지 되살린다. */
+  function applySavedProgress(snap) {
     if (!snap || !snap.type) return false;
     const card = document.querySelector('.letter-type-card[onclick*="' + snap.type + '"]');
     if (!card) return false;
@@ -2575,7 +2621,7 @@
 
     // 유형 선택(입력 초기화 포함) → 저장해 둔 입력값 복원 → 단계 이동
     selectType(snap.type, card);
-    WIZ_FIELD_IDS.forEach(id => {
+    WIZ_FIELD_IDS.forEach(function (id) {
       const el = document.getElementById(id);
       if (el && snap.fields && snap.fields[id] !== undefined) el.value = snap.fields[id];
     });
@@ -2587,7 +2633,43 @@
     return true;
   }
 
-  // ── ⚙️ 선생님 설정 (마스터 프롬프트 4장) ──────────────────
+  /** 로그인 직후 부른다. 쓰다 만 편지가 있으면 이어서 쓸지 물어본다. */
+  function askResumeIfAny() {
+    const saved = loadLocalProgress();
+    if (!isResumable(saved)) return false;   // 아무것도 안 썼거나 이미 끝냈으면 조용히 지나간다
+    showResumeAsk(saved.state);
+    return true;
+  }
+
+  function showResumeAsk(snap) {
+    const old = document.getElementById('resumeAsk');
+    if (old) old.remove();
+    const box = document.createElement('div');
+    box.id = 'resumeAsk';
+    box.style.cssText = 'position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.45);' +
+      'display:flex;align-items:center;justify-content:center;padding:20px;';
+    box.innerHTML =
+      '<div style="background:#fff;border-radius:18px;padding:28px 24px;max-width:420px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.2);">' +
+      '<div style="font-size:2.6em;margin-bottom:8px;">💌</div>' +
+      '<div style="font-size:1.35em;font-weight:bold;color:#1e293b;margin-bottom:8px;">쓰다 만 편지가 있어요</div>' +
+      '<div style="font-size:1em;color:#475569;line-height:1.7;margin-bottom:18px;">' +
+      '지난번에 쓰다 만 편지가 있어요.<br>이어서 쓸까요?</div>' +
+      '<button id="resumeYes" style="width:100%;padding:14px;background:#7c3aed;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:1.05em;cursor:pointer;">네, 이어서 쓸래요</button>' +
+      '<button id="resumeNo" style="width:100%;margin-top:8px;padding:13px;background:#fff;color:#64748b;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:1em;cursor:pointer;">아니오, 처음부터</button>' +
+      '</div>';
+    document.body.appendChild(box);
+
+    document.getElementById('resumeYes').onclick = function () {
+      box.remove();
+      applySavedProgress(snap);
+    };
+    document.getElementById('resumeNo').onclick = function () {
+      box.remove();
+      clearProgressLocal();   // 처음부터 하겠다고 했으므로 기록을 지운다
+    };
+  }
+
+  // ── ⚙️ 선생님 메뉴 (마스터 프롬프트 4장) ──────────────────
   // 데모 ↔ 연동을 잇는 다리. 학생 링크(#c=)로 접속했거나
   // Apps Script가 직접 서빙 중이면 메뉴를 화면에서 아예 제거한다.
   function initTeacherMenu() {
@@ -2984,8 +3066,8 @@
     document.getElementById('introScreen').style.display = 'flex';
     goIntroSlide(0);
 
-    // 데모 모드: 쓰다 만 편지가 있으면 그 단계부터 이어서
-    demoResumeIfAny();
+    // 쓰다 만 편지가 있으면 이어서 쓸지 물어본다 (이 기기에 저장된 것)
+    askResumeIfAny();
 
     // Sheets에서 이전 편지 불러오기
     callServer('getMyLetters', [studentName],
@@ -3366,8 +3448,8 @@
     // 왼쪽 안내 카드가 길면 자동 축소 (아이콘·예시 잘림 방지)
     requestAnimationFrame(() => fitWizGuides());
 
-    // 데모 모드: 진행 상황 책갈피 저장
-    demoSaveProgress();
+    // 이어하기 책갈피 저장
+    saveProgressLocal();
 
     // 다음/보내기 버튼
     const next = document.getElementById('wizNext');
@@ -3653,7 +3735,7 @@
     _selectedPaper = paper;
     document.querySelectorAll('.paper-chip').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
-    demoSaveProgress();
+    saveProgressLocal();
   }
 
   // ── 내가 쓴 편지 다시 보기 ──────────────────────────────
@@ -3787,7 +3869,7 @@
       res => {
         document.getElementById('savingOverlay').classList.remove('show');
         if (res.success) {
-          demoClearProgress();   // 완료했으므로 이어하기 책갈피 삭제
+          clearProgressLocal();   // 편지를 보냈으므로 이어하기 책갈피 삭제
 
           if (res.demo) {
             // 데모 모드: 이 기기에만 저장됨을 분명히 알림 (공유 링크 없음)
@@ -4066,7 +4148,7 @@
   window.addEventListener('DOMContentLoaded', () => {
     WIZ_FIELD_IDS.forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.addEventListener('change', demoSaveProgress);
+      if (el) el.addEventListener('change', saveProgressLocal);
     });
   });
   window.addEventListener('resize', applyScale);
