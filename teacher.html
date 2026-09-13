@@ -21,7 +21,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>📊 마음 전달 우체국 — 교사 대시보드</title>
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; word-break:keep-all; overflow-wrap:break-word; }
+    /* 한국어 줄바꿈 — 낱말이 중간에서 끊기지 않게 화면 전체에 겁니다. */
+    html, body, body *, body *::before, body *::after {
+      word-break: keep-all;
+      overflow-wrap: normal;
+      word-wrap: normal;
+      line-break: strict;
+    }
+    /* 학생이 쓴 글과 주소는 띄어쓰기 없이 길게 이어질 수 있어
+       상자 밖으로 넘치지 않도록 이 자리에서만 끊습니다. */
+    textarea, input, .content-box, .letter-content, .pl-content,
+    #review-content, .mail-item, #studentLinkText, #teacherLinkText {
+      overflow-wrap: anywhere;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
 
     body {
       font-family: 'Malgun Gothic', sans-serif;
@@ -396,44 +409,31 @@
 </div>
 
 <script>
-  // Apps Script가 직접 서빙할 때만 아래 한 줄이 실제 데이터로 바뀐다.
-  // GitHub Pages에서 열리면 이 블록만 조용히 무시되고 다음 블록이 이어서 실행된다.
-  var _PRELOADED = <?!= classDataJson ?>;
-</script>
-<script>
-  // 정적 서빙(위 블록이 무시된 경우)에는 미리 실린 데이터가 없다
-  if (typeof _PRELOADED === 'undefined') { window._PRELOADED = null; }
+  // ══════════════════════════════════════════════════════════
+  //  이 화면은 깃허브에 올려 두고, 편지를 담아 둔 시트(웹 앱)와
+  //  따로 떨어져 있다. 그래서 주소 뒤에 붙은 정보로
+  //  어느 시트에 물어볼지 알아낸다.
+  //      teacher.html#c=시트주소
+  //  ※ 접속 방식은 학생 화면(student.html)과 똑같다. 고치지 말 것.
+  // ══════════════════════════════════════════════════════════
+  const _mExec   = (location.hash || '').match(/#c=([^&]+)/);
+  const EXEC_URL = _mExec ? decodeURIComponent(_mExec[1]) : '';
 
-  // ── 데이터 ──────────────────────────────────────────────
-  let allData = [];
-  let headers = [];
+  // 연결된 시트로 요청 보내기
+  //  화면과 시트는 서로 다른 주소라, 브라우저 보안에 막히지 않는 방식으로 부른다.
+  //  보낼 내용이 아주 길 때만 예전 방식으로 보낸다.
+  let _reqSeq = 0;
+  function requestSheet(baseUrl, fnName, args) {
+    const body  = JSON.stringify(args || []);
+    const query = 'fn=' + encodeURIComponent(fnName) + '&args=' + encodeURIComponent(body);
 
-  // 열 인덱스 (Code.gs 헤더 순서와 일치) — 13열 구조
-  const COL = {
-    time: 0, name: 1, type: 2, mode: 3,
-    recipient: 4, charCount: 5, score: 6,
-    wordCount: 7, words: 8,
-    sincerity: 9, actions: 10, revision: 11, content: 12
-  };
-
-  // ── 데이터 가져오기 — 접속 방식에 맞는 길로 ─────────────
-  // [A] Apps Script 직접 서빙: 미리 실린 데이터 사용
-  // [B] GitHub Pages + #c=창고주소: 접수 창구에 요청
-  const _hashC   = location.hash.match(/[#&]c=([^&]+)/);
-  const EXEC_URL = _hashC ? decodeURIComponent(_hashC[1]) : '';
-
-  function fetchClassData(cb) {
-    if (window._PRELOADED) { cb(window._PRELOADED); return; }
-    if (typeof google !== 'undefined' && google.script && google.script.run) {
-      google.script.run
-        .withSuccessHandler(cb)
-        .withFailureHandler(() => cb({ success: false, message: '연결 오류가 발생했어요.' }))
-        .getClassData();
-      return;
+    if (query.length > 6000 && typeof fetch === 'function') {
+      return fetch(baseUrl, { method: 'POST', body: JSON.stringify({ fn: fnName, args: args || [] }) })
+        .then(r => r.json());
     }
-    if (EXEC_URL) {
-      // 화면과 시트가 서로 다른 주소이므로, 막히지 않는 방식으로 부른다.
-      const name = '_hpt_' + Date.now();
+
+    return new Promise(function (resolve, reject) {
+      const cb = '_hp_' + Date.now() + '_' + (_reqSeq++);
       let done = false;
       const timer = setTimeout(function () { finish(null, true); }, 20000);
 
@@ -441,26 +441,52 @@
         if (done) return;
         done = true;
         clearTimeout(timer);
-        try { delete window[name]; } catch (e) { window[name] = undefined; }
-        const el = document.getElementById(name);
+        try { delete window[cb]; } catch (e) { window[cb] = undefined; }
+        const el = document.getElementById(cb);
         if (el && el.parentNode) el.parentNode.removeChild(el);
-        if (failed) cb({ success: false, message: '연결 오류가 발생했어요. 주소를 확인해 주세요.' });
-        else cb(res);
+        if (failed) reject(new Error('연결에 실패했어요.'));
+        else resolve(res);
       }
 
-      window[name] = function (res) { finish(res, false); };
+      window[cb] = function (res) { finish(res, false); };
 
       const sc = document.createElement('script');
-      sc.id  = name;
-      sc.src = EXEC_URL + (EXEC_URL.indexOf('?') >= 0 ? '&' : '?') +
-               'fn=getClassData&args=' + encodeURIComponent('[]') +
-               '&callback=' + name + '&_=' + Date.now();
+      sc.id  = cb;
+      sc.src = baseUrl + (baseUrl.indexOf('?') >= 0 ? '&' : '?') + query +
+               '&callback=' + encodeURIComponent(cb) + '&_=' + Date.now();
       sc.async = true;
       sc.onerror = function () { finish(null, true); };
       document.body.appendChild(sc);
+    });
+  }
+
+  // ── 데이터 ──────────────────────────────────────────────
+  let allData = [];
+  let headers = [];
+
+  // 열 인덱스 (Code.gs 헤더 순서와 일치)
+  // 시트는 열여섯 칸이지만, 이 화면은 앞의 열세 칸만 씁니다.
+  // 나머지(편지 ID, 편지지, 보내는 사람)는 편지 보기 화면에서 씁니다.
+  const COL = {
+    time: 0, name: 1, type: 2, mode: 3,
+    recipient: 4, charCount: 5, score: 6,
+    wordCount: 7, words: 8,
+    sincerity: 9, actions: 10, revision: 11, content: 12
+  };
+
+  // ── 학급 자료 가져오기 ──────────────────────────────────
+  //   주소에 담긴 시트로 물어본다.
+  function fetchClassData(cb) {
+    if (!EXEC_URL) {
+      cb({ success: false, message: "주소가 올바르지 않아요. 앱 화면의 '선생님 메뉴'에서 대시보드 링크를 다시 받아 주세요." });
       return;
     }
-    cb({ success: false, message: '주소 뒤에 #c=시트 웹앱 주소 를 붙여 접속해 주세요.' });
+    requestSheet(EXEC_URL, 'getClassData', [])
+      .then(function (res) { cb(res); })
+      .catch(function (err) {
+        console.error('학급 자료 불러오기 실패: ' + err);
+        cb({ success: false, message: '자료를 불러오지 못했어요. 잠시 뒤 새로고침을 눌러 주세요.' });
+      });
   }
 
   function loadData() {
